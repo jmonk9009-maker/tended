@@ -1,0 +1,1203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tended — Your Home, Always Tended</title>
+<meta name="description" content="The simple home maintenance app that tells you exactly what to do and when. Never miss a filter change, gutter clean, or safety check again.">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap');
+
+:root {
+  --green: #2d5a3d;
+  --green-mid: #3a6b4a;
+  --green-light: #eef4f0;
+  --green-pale: #f4f9f5;
+  --gold: #8a6020;
+  --gold-light: #fdf6e8;
+  --ink: #1a1710;
+  --muted: #7a7060;
+  --border: #e0d8cc;
+  --bg: #f8f5ef;
+  --white: #ffffff;
+  --red: #c0392b;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'DM Sans', sans-serif;
+  overflow-x: hidden;
+  line-height: 1.6;
+}
+
+/* ── NOISE TEXTURE ── */
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");
+  pointer-events: none; z-index: 0; opacity: 0.6;
+}
+
+/* ── NAV ── */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 20px 40px;
+  background: rgba(248,245,239,0.92);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.3s;
+}
+
+nav.scrolled { border-bottom-color: var(--border); }
+
+.nav-logo {
+  font-family: 'Lora', serif;
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: var(--green);
+  letter-spacing: -0.02em;
+  text-decoration: none;
+}
+
+.nav-logo span { font-style: italic; font-weight: 400; }
+
+.nav-cta {
+  background: var(--green);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 22px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.nav-cta:hover { background: #245030; transform: translateY(-1px); }
+
+/* ── HERO ── */
+.hero {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 120px 24px 80px;
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-bg {
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(58,107,74,0.08) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.hero-leaf {
+  position: absolute;
+  font-size: 8rem;
+  opacity: 0.04;
+  pointer-events: none;
+  animation: leafFloat 8s ease-in-out infinite;
+}
+
+.hero-leaf:nth-child(1) { top: 10%; left: 5%; animation-delay: 0s; }
+.hero-leaf:nth-child(2) { top: 20%; right: 8%; animation-delay: 2s; font-size: 5rem; }
+.hero-leaf:nth-child(3) { bottom: 20%; left: 10%; animation-delay: 4s; font-size: 6rem; }
+.hero-leaf:nth-child(4) { bottom: 15%; right: 5%; animation-delay: 6s; font-size: 4rem; }
+
+@keyframes leafFloat {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-20px) rotate(5deg); }
+}
+
+.hero-pre {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--green-light);
+  border: 1px solid rgba(58,107,74,0.2);
+  border-radius: 20px;
+  padding: 6px 16px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--green);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 28px;
+  animation: fadeUp 0.6s ease forwards;
+}
+
+.pre-dot {
+  width: 6px; height: 6px;
+  background: var(--green);
+  border-radius: 50%;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(0.8)} }
+
+.hero h1 {
+  font-family: 'Lora', serif;
+  font-size: clamp(2.8rem, 7vw, 5.5rem);
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  color: var(--ink);
+  max-width: 800px;
+  margin-bottom: 24px;
+  animation: fadeUp 0.6s ease 0.1s both;
+}
+
+.hero h1 em {
+  font-style: italic;
+  font-weight: 400;
+  color: var(--green);
+}
+
+.hero-sub {
+  font-size: clamp(1rem, 2.5vw, 1.2rem);
+  color: var(--muted);
+  max-width: 520px;
+  line-height: 1.7;
+  margin-bottom: 48px;
+  font-weight: 400;
+  animation: fadeUp 0.6s ease 0.2s both;
+}
+
+/* EMAIL FORM */
+.email-form {
+  display: flex;
+  gap: 10px;
+  max-width: 480px;
+  width: 100%;
+  margin: 0 auto 16px;
+  animation: fadeUp 0.6s ease 0.3s both;
+}
+
+.email-input {
+  flex: 1;
+  background: var(--white);
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  padding: 14px 18px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.95rem;
+  color: var(--ink);
+  outline: none;
+  transition: border-color 0.15s;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+
+.email-input:focus { border-color: var(--green); }
+.email-input::placeholder { color: #b0a898; }
+
+.submit-btn {
+  background: var(--green);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 14px 24px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.92rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+  box-shadow: 0 4px 16px rgba(45,90,61,0.25);
+}
+
+.submit-btn:hover { background: #245030; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(45,90,61,0.3); }
+.submit-btn:active { transform: translateY(0); }
+.submit-btn:disabled { background: var(--border); box-shadow: none; cursor: not-allowed; }
+
+.form-note {
+  font-size: 0.76rem;
+  color: var(--muted);
+  animation: fadeUp 0.6s ease 0.4s both;
+}
+
+.success-msg {
+  display: none;
+  background: var(--green-light);
+  border: 1px solid rgba(58,107,74,0.2);
+  border-radius: 10px;
+  padding: 14px 20px;
+  color: var(--green);
+  font-size: 0.92rem;
+  font-weight: 500;
+  max-width: 480px;
+  width: 100%;
+  text-align: center;
+}
+
+.success-msg.show { display: block; }
+
+.hero-stats {
+  display: flex;
+  gap: 40px;
+  margin-top: 64px;
+  animation: fadeUp 0.6s ease 0.5s both;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.stat { text-align: center; }
+.stat-num {
+  font-family: 'Lora', serif;
+  font-size: 2rem;
+  font-weight: 600;
+  color: var(--green);
+  letter-spacing: -0.02em;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+.stat-label { font-size: 0.78rem; color: var(--muted); font-weight: 500; }
+.stat-div { width: 1px; background: var(--border); align-self: stretch; }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ── PROBLEM SECTION ── */
+.problem {
+  background: var(--ink);
+  padding: 100px 24px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.problem::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse 60% 50% at 50% 50%, rgba(58,107,74,0.15) 0%, transparent 70%);
+}
+
+.problem h2 {
+  font-family: 'Lora', serif;
+  font-size: clamp(1.8rem, 4vw, 3rem);
+  font-weight: 400;
+  color: #fff;
+  letter-spacing: -0.02em;
+  line-height: 1.3;
+  max-width: 700px;
+  margin: 0 auto 24px;
+  position: relative;
+}
+
+.problem h2 em { font-style: italic; color: rgba(255,255,255,0.5); }
+.problem h2 strong { font-weight: 700; }
+
+.problem-sub {
+  color: rgba(255,255,255,0.5);
+  font-size: 1rem;
+  max-width: 480px;
+  margin: 0 auto;
+  position: relative;
+}
+
+.problem-items {
+  display: flex;
+  gap: 20px;
+  max-width: 800px;
+  margin: 60px auto 0;
+  flex-wrap: wrap;
+  justify-content: center;
+  position: relative;
+}
+
+.problem-item {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+  padding: 20px 24px;
+  flex: 1;
+  min-width: 200px;
+  text-align: left;
+}
+
+.pi-icon { font-size: 1.5rem; margin-bottom: 10px; }
+.pi-title { font-weight: 600; font-size: 0.92rem; color: #fff; margin-bottom: 6px; }
+.pi-desc { font-size: 0.8rem; color: rgba(255,255,255,0.45); line-height: 1.5; }
+
+/* ── FEATURES ── */
+.features {
+  padding: 100px 24px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.section-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--green);
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.section-title {
+  font-family: 'Lora', serif;
+  font-size: clamp(1.8rem, 4vw, 2.8rem);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  text-align: center;
+  margin-bottom: 12px;
+}
+
+.section-title em { font-style: italic; font-weight: 400; color: var(--green); }
+
+.section-sub {
+  text-align: center;
+  color: var(--muted);
+  font-size: 1rem;
+  max-width: 500px;
+  margin: 0 auto 60px;
+  line-height: 1.7;
+}
+
+.feat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.feat-card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 28px;
+  transition: all 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+
+.feat-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: var(--green);
+  transform: scaleX(0);
+  transition: transform 0.3s;
+  transform-origin: left;
+}
+
+.feat-card:hover { box-shadow: 0 8px 32px rgba(0,0,0,0.08); transform: translateY(-2px); }
+.feat-card:hover::before { transform: scaleX(1); }
+
+.feat-card.gold::before { background: var(--gold); }
+
+.feat-icon {
+  width: 48px; height: 48px;
+  background: var(--green-light);
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.3rem;
+  margin-bottom: 18px;
+}
+
+.feat-card.gold .feat-icon { background: var(--gold-light); }
+
+.feat-title {
+  font-family: 'Lora', serif;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 10px;
+  letter-spacing: -0.01em;
+}
+
+.feat-desc {
+  font-size: 0.88rem;
+  color: var(--muted);
+  line-height: 1.65;
+}
+
+.feat-tag {
+  display: inline-block;
+  background: var(--gold-light);
+  color: var(--gold);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 4px;
+  margin-top: 12px;
+}
+
+/* ── HOW IT WORKS ── */
+.how {
+  background: var(--green-pale);
+  padding: 100px 24px;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+
+.how-inner { max-width: 900px; margin: 0 auto; }
+
+.steps {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0;
+  margin-top: 60px;
+  position: relative;
+}
+
+.steps::before {
+  content: '';
+  position: absolute;
+  top: 32px; left: 10%; right: 10%;
+  height: 1px;
+  background: var(--border);
+}
+
+.step { text-align: center; padding: 0 20px; position: relative; }
+
+.step-num {
+  width: 64px; height: 64px;
+  background: var(--white);
+  border: 2px solid var(--border);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Lora', serif;
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: var(--green);
+  margin: 0 auto 20px;
+  position: relative;
+  z-index: 1;
+}
+
+.step-title { font-weight: 600; font-size: 0.95rem; margin-bottom: 8px; }
+.step-desc { font-size: 0.83rem; color: var(--muted); line-height: 1.6; }
+
+/* ── AI SECTION ── */
+.ai-section {
+  padding: 100px 24px;
+  max-width: 1100px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 80px;
+  align-items: center;
+}
+
+@media (max-width: 768px) { .ai-section { grid-template-columns: 1fr; gap: 40px; } }
+
+.ai-text .section-label { text-align: left; }
+.ai-text .section-title { text-align: left; font-size: 2rem; }
+.ai-text .section-sub { text-align: left; margin: 0 0 32px; }
+
+.ai-points { display: grid; gap: 16px; }
+
+.ai-point {
+  display: flex; gap: 14px; align-items: flex-start;
+}
+
+.ai-point-icon {
+  width: 36px; height: 36px;
+  background: var(--green-light);
+  border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.ai-point-text strong { font-size: 0.9rem; display: block; margin-bottom: 3px; }
+.ai-point-text span { font-size: 0.8rem; color: var(--muted); line-height: 1.5; }
+
+.ai-visual {
+  background: var(--green);
+  border-radius: 20px;
+  padding: 32px;
+  color: #fff;
+  position: relative;
+  overflow: hidden;
+}
+
+.ai-visual::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse at 80% 20%, rgba(255,255,255,0.08) 0%, transparent 60%);
+}
+
+.ai-visual-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  opacity: 0.6;
+  margin-bottom: 20px;
+}
+
+.ai-task-preview {
+  background: rgba(255,255,255,0.1);
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.85rem;
+}
+
+.ai-task-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.atp-red { background: #ff6b6b; }
+.atp-amber { background: #ffd93d; }
+.atp-green { background: #6bcb77; }
+
+.ai-task-name { flex: 1; font-weight: 500; }
+.ai-task-due { font-size: 0.72rem; opacity: 0.65; white-space: nowrap; }
+
+.ai-insight {
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 10px;
+  padding: 14px 16px;
+  font-size: 0.8rem;
+  line-height: 1.6;
+  opacity: 0.85;
+  margin-top: 16px;
+}
+
+.ai-insight strong { display: block; margin-bottom: 4px; opacity: 1; font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; }
+
+/* ── PRICING ── */
+.pricing {
+  background: var(--ink);
+  padding: 100px 24px;
+  text-align: center;
+}
+
+.pricing .section-title { color: #fff; }
+.pricing .section-sub { color: rgba(255,255,255,0.5); }
+.pricing .section-label { color: rgba(255,255,255,0.4); }
+
+.pricing-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.price-card {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 16px;
+  padding: 28px;
+  text-align: left;
+  position: relative;
+  transition: all 0.2s;
+}
+
+.price-card.featured {
+  background: var(--green);
+  border-color: var(--green);
+}
+
+.price-card.pro {
+  background: rgba(138,96,32,0.15);
+  border-color: rgba(138,96,32,0.3);
+}
+
+.price-badge {
+  position: absolute; top: -10px; left: 20px;
+  font-size: 0.62rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+  padding: 3px 10px; border-radius: 10px; color: #fff;
+}
+
+.price-badge.g { background: var(--green); }
+.price-badge.gold { background: var(--gold); }
+
+.price-tier { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(255,255,255,0.5); margin-bottom: 8px; }
+.price-card.featured .price-tier { color: rgba(255,255,255,0.7); }
+
+.price-amount {
+  font-family: 'Lora', serif;
+  font-size: 2.4rem;
+  font-weight: 600;
+  color: #fff;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+
+.price-amount span { font-size: 1rem; font-weight: 400; opacity: 0.6; }
+.price-period { font-size: 0.75rem; color: rgba(255,255,255,0.4); margin-bottom: 20px; }
+.price-card.featured .price-period { color: rgba(255,255,255,0.6); }
+
+.price-feats { list-style: none; display: grid; gap: 8px; }
+
+.price-feat {
+  display: flex; align-items: flex-start; gap: 8px;
+  font-size: 0.82rem; color: rgba(255,255,255,0.6);
+}
+
+.price-card.featured .price-feat { color: rgba(255,255,255,0.85); }
+.price-card.pro .price-feat { color: rgba(255,255,255,0.65); }
+
+.price-feat::before { content: '✓'; color: var(--green); font-weight: 700; font-size: 0.75rem; flex-shrink: 0; margin-top: 1px; }
+.price-card.featured .price-feat::before { color: rgba(255,255,255,0.6); }
+.price-card.pro .price-feat::before { color: var(--gold); }
+
+/* ── SOCIAL PROOF ── */
+.proof {
+  padding: 100px 24px;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.reviews {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+  margin-top: 48px;
+}
+
+.review {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 24px;
+}
+
+.review-stars { color: #f4b942; font-size: 0.85rem; margin-bottom: 12px; }
+.review-text { font-size: 0.88rem; color: var(--ink); line-height: 1.65; margin-bottom: 16px; font-style: italic; }
+.review-author { font-size: 0.78rem; font-weight: 600; color: var(--muted); }
+.review-placeholder { opacity: 0.35; }
+
+/* ── FINAL CTA ── */
+.final-cta {
+  background: var(--green);
+  padding: 100px 24px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.final-cta::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse 70% 60% at 50% 100%, rgba(255,255,255,0.06) 0%, transparent 70%);
+}
+
+.final-cta h2 {
+  font-family: 'Lora', serif;
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  font-weight: 600;
+  color: #fff;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  max-width: 600px;
+  margin: 0 auto 16px;
+  position: relative;
+}
+
+.final-cta h2 em { font-style: italic; font-weight: 400; opacity: 0.75; }
+
+.final-cta p {
+  color: rgba(255,255,255,0.65);
+  font-size: 1rem;
+  margin-bottom: 40px;
+  position: relative;
+}
+
+.final-email-form {
+  display: flex;
+  gap: 10px;
+  max-width: 440px;
+  margin: 0 auto 12px;
+  position: relative;
+}
+
+.final-input {
+  flex: 1;
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 10px;
+  padding: 14px 18px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.92rem;
+  color: #fff;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.final-input::placeholder { color: rgba(255,255,255,0.4); }
+.final-input:focus { border-color: rgba(255,255,255,0.5); }
+
+.final-btn {
+  background: #fff;
+  color: var(--green);
+  border: none;
+  border-radius: 10px;
+  padding: 14px 22px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.final-btn:hover { background: #f0f0ee; transform: translateY(-1px); }
+.final-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+.final-note { font-size: 0.74rem; color: rgba(255,255,255,0.45); position: relative; }
+
+.final-success {
+  display: none;
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 10px;
+  padding: 14px 20px;
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 500;
+  max-width: 440px;
+  margin: 0 auto;
+  position: relative;
+}
+
+.final-success.show { display: block; }
+
+/* ── FOOTER ── */
+footer {
+  background: var(--ink);
+  padding: 32px 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.footer-logo {
+  font-family: 'Lora', serif;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: rgba(255,255,255,0.6);
+  letter-spacing: -0.02em;
+}
+
+.footer-logo span { font-style: italic; }
+.footer-copy { font-size: 0.75rem; color: rgba(255,255,255,0.3); }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 640px) {
+  nav { padding: 16px 20px; }
+  .email-form, .final-email-form { flex-direction: column; }
+  .submit-btn, .final-btn { width: 100%; }
+  .hero-stats { gap: 24px; }
+  .stat-div { display: none; }
+  .steps::before { display: none; }
+  footer { padding: 24px 20px; flex-direction: column; text-align: center; }
+}
+
+/* ── COUNT UP ── */
+.counting { display: inline-block; }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav id="nav">
+  <a href="#" class="nav-logo">ten<span>ded</span></a>
+  <a href="#notify" class="nav-cta">Get Early Access</a>
+</nav>
+
+<!-- HERO -->
+<section class="hero" id="home">
+  <div class="hero-bg"></div>
+  <div class="hero-leaf">🌿</div>
+  <div class="hero-leaf">🍃</div>
+  <div class="hero-leaf">🌱</div>
+  <div class="hero-leaf">🌿</div>
+
+  <div class="hero-pre">
+    <span class="pre-dot"></span>
+    Coming Soon — Join the Waitlist
+  </div>
+
+  <h1>Your home deserves to be <em>properly tended</em></h1>
+
+  <p class="hero-sub">The smart home maintenance app that builds your personal schedule, reminds you when things are due, and keeps a record of everything — so nothing ever falls through the cracks.</p>
+
+  <div class="email-form" id="heroForm">
+    <input type="email" class="email-input" id="heroEmail" placeholder="Enter your email address">
+    <button class="submit-btn" id="heroBtn" onclick="submitEmail('hero')">Notify Me →</button>
+  </div>
+  <div class="success-msg" id="heroSuccess">🌿 You're on the list! We'll notify you the moment Tended launches.</div>
+  <p class="form-note">No spam, ever. Just a launch notification when we're ready.</p>
+
+  <div class="hero-stats">
+    <div class="stat">
+      <div class="stat-num">3</div>
+      <div class="stat-label">Simple tiers</div>
+    </div>
+    <div class="stat-div"></div>
+    <div class="stat">
+      <div class="stat-num">AI</div>
+      <div class="stat-label">Personalized setup</div>
+    </div>
+    <div class="stat-div"></div>
+    <div class="stat">
+      <div class="stat-num">8am</div>
+      <div class="stat-label">Daily reminders</div>
+    </div>
+    <div class="stat-div"></div>
+    <div class="stat">
+      <div class="stat-num">$0</div>
+      <div class="stat-label">To get started</div>
+    </div>
+  </div>
+</section>
+
+<!-- PROBLEM -->
+<section class="problem">
+  <h2>Most homeowners are <em>one missed task</em> away from a <strong>very expensive repair</strong></h2>
+  <p class="problem-sub">A $15 filter change ignored for a year becomes a $4,000 HVAC replacement. It's not laziness — it's that nobody ever told you when.</p>
+  <div class="problem-items">
+    <div class="problem-item">
+      <div class="pi-icon">🤷</div>
+      <div class="pi-title">You don't know what to do</div>
+      <div class="pi-desc">Every home is different. Generic checklists don't account for your HVAC type, home age, or climate.</div>
+    </div>
+    <div class="problem-item">
+      <div class="pi-icon">📅</div>
+      <div class="pi-title">You forget when to do it</div>
+      <div class="pi-desc">Life gets busy. Without reminders, maintenance tasks get pushed until something breaks.</div>
+    </div>
+    <div class="problem-item">
+      <div class="pi-icon">📄</div>
+      <div class="pi-title">You have no record of it</div>
+      <div class="pi-desc">When you sell your home or file a warranty claim, you need proof. A memory isn't proof.</div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="features">
+  <div class="section-label">What Tended Does</div>
+  <h2 class="section-title">Everything your home needs, <em>nothing it doesn't</em></h2>
+  <p class="section-sub">We built Tended after looking at every competitor and asking: what do people actually need? This is the answer.</p>
+
+  <div class="feat-grid">
+    <div class="feat-card">
+      <div class="feat-icon">✨</div>
+      <div class="feat-title">AI-Personalized Schedule</div>
+      <div class="feat-desc">Tell us your home type, HVAC system, and year built. Our AI generates a custom maintenance schedule specific to your home — not a generic checklist.</div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon">🔔</div>
+      <div class="feat-title">Reliable Daily Reminders</div>
+      <div class="feat-desc">Every morning at 8am, we check your tasks and send a push notification if anything is due or overdue. Works on your phone, tablet, and computer.</div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon">✓</div>
+      <div class="feat-title">One-Tap Complete</div>
+      <div class="feat-desc">Mark a task done with one tap. Tended automatically schedules the next occurrence so you never have to think about it again.</div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon">📋</div>
+      <div class="feat-title">Full History Log</div>
+      <div class="feat-desc">Every completion logged with a timestamp. Know exactly when you last changed your filter, flushed your water heater, or inspected your roof.</div>
+    </div>
+    <div class="feat-card gold">
+      <div class="feat-icon">📷</div>
+      <div class="feat-title">Photo & Receipt Storage</div>
+      <div class="feat-desc">Attach photos and receipts to every completion. Build a timestamped maintenance record that proves you took care of your home.</div>
+      <div class="feat-tag">Tended Pro</div>
+    </div>
+    <div class="feat-card gold">
+      <div class="feat-icon">📄</div>
+      <div class="feat-title">PDF Export</div>
+      <div class="feat-desc">Generate a shareable maintenance record for home sales, insurance claims, or warranty disputes. Worth thousands when you need it.</div>
+      <div class="feat-tag">Tended Pro</div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="how">
+  <div class="how-inner">
+    <div class="section-label">How It Works</div>
+    <h2 class="section-title">Up and running in <em>under 2 minutes</em></h2>
+    <p class="section-sub">No complicated setup. No learning curve. Just a home that's properly looked after.</p>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-title">Tell us about your home</div>
+        <div class="step-desc">Home type, HVAC system, year built. Takes 30 seconds.</div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-title">AI builds your schedule</div>
+        <div class="step-desc">We generate a personalized task list based on your specific home.</div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-title">Get reminded daily</div>
+        <div class="step-desc">We ping you every morning when something needs attention.</div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-title">Tap done, move on</div>
+        <div class="step-desc">One tap marks it complete and reschedules for next time.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- AI SECTION -->
+<section style="padding:100px 24px; overflow:hidden;">
+  <div class="ai-section">
+    <div class="ai-text">
+      <div class="section-label">Smart by Default</div>
+      <h2 class="section-title">Not a generic checklist. <em>Your home's schedule.</em></h2>
+      <p class="section-sub">Most apps give everyone the same list. Tended asks about your specific home and builds something that actually fits.</p>
+      <div class="ai-points">
+        <div class="ai-point">
+          <div class="ai-point-icon">🏠</div>
+          <div class="ai-point-text">
+            <strong>Home type aware</strong>
+            <span>Condo owners don't need gutter cleaning. House owners do. We know the difference.</span>
+          </div>
+        </div>
+        <div class="ai-point">
+          <div class="ai-point-icon">📅</div>
+          <div class="ai-point-text">
+            <strong>Age-specific tasks</strong>
+            <span>A 1978 home has different needs than a 2020 build. Your schedule reflects that.</span>
+          </div>
+        </div>
+        <div class="ai-point">
+          <div class="ai-point-icon">🌀</div>
+          <div class="ai-point-text">
+            <strong>HVAC-matched reminders</strong>
+            <span>Gas furnace, heat pump, or boiler — each has different maintenance needs and timing.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="ai-visual">
+      <div class="ai-visual-label">✨ Your personalized schedule</div>
+      <div class="ai-task-preview">
+        <div class="ai-task-dot atp-red"></div>
+        <div class="ai-task-name">Replace HVAC filter</div>
+        <div class="ai-task-due">3 days overdue</div>
+      </div>
+      <div class="ai-task-preview">
+        <div class="ai-task-dot atp-amber"></div>
+        <div class="ai-task-name">Test smoke detectors</div>
+        <div class="ai-task-due">Due today</div>
+      </div>
+      <div class="ai-task-preview">
+        <div class="ai-task-dot atp-green"></div>
+        <div class="ai-task-name">Flush water heater</div>
+        <div class="ai-task-due">Due in 18 days</div>
+      </div>
+      <div class="ai-task-preview">
+        <div class="ai-task-dot atp-green"></div>
+        <div class="ai-task-name">Inspect roof</div>
+        <div class="ai-task-due">Due in 2 months</div>
+      </div>
+      <div class="ai-insight">
+        <strong>✨ AI insight for your home</strong>
+        Your 1994 home likely has galvanized steel pipes. We've added annual pipe inspection and water heater flush to your schedule to catch issues early.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section class="pricing">
+  <div class="section-label">Simple Pricing</div>
+  <h2 class="section-title" style="margin-bottom:12px;">Start free. <em>Upgrade when you're ready.</em></h2>
+  <p class="section-sub">No credit card required to get started. Cancel anytime.</p>
+
+  <div class="pricing-grid">
+    <div class="price-card">
+      <div class="price-tier">Starter</div>
+      <div class="price-amount">$0</div>
+      <div class="price-period">free forever</div>
+      <ul class="price-feats">
+        <li class="price-feat">3 AI-generated tasks active</li>
+        <li class="price-feat">Daily push reminders</li>
+        <li class="price-feat">Basic completion log</li>
+        <li class="price-feat">iOS, Android & Web</li>
+      </ul>
+    </div>
+
+    <div class="price-card featured">
+      <div class="price-badge g">Most Popular</div>
+      <div class="price-tier">Tended</div>
+      <div class="price-amount">$3.99<span>/mo</span></div>
+      <div class="price-period">or $24.99/year · 7-day free trial</div>
+      <ul class="price-feats">
+        <li class="price-feat">Full AI schedule unlocked</li>
+        <li class="price-feat">Unlimited custom tasks</li>
+        <li class="price-feat">Full completion history</li>
+        <li class="price-feat">Seasonal bundle refreshes</li>
+      </ul>
+    </div>
+
+    <div class="price-card pro">
+      <div class="price-badge gold">Best Value</div>
+      <div class="price-tier">Tended Pro</div>
+      <div class="price-amount">$6.99<span>/mo</span></div>
+      <div class="price-period">or $44.99/year · 7-day free trial</div>
+      <ul class="price-feats">
+        <li class="price-feat">Everything in Tended</li>
+        <li class="price-feat">Photo & receipt attachments</li>
+        <li class="price-feat">Timestamped maintenance record</li>
+        <li class="price-feat">PDF export for home sales</li>
+        <li class="price-feat">Shareable home history</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- SOCIAL PROOF -->
+<section class="proof">
+  <div class="section-label">Early Feedback</div>
+  <h2 class="section-title">People are <em>already excited</em></h2>
+  <p class="section-sub">Here's what early testers are saying about Tended.</p>
+
+  <div class="reviews">
+    <div class="review review-placeholder">
+      <div class="review-stars">★★★★★</div>
+      <div class="review-text">"Finally an app that doesn't try to be everything. I set it up in 2 minutes and got my first reminder the next morning. This is exactly what I needed."</div>
+      <div class="review-author">Sarah M. — Homeowner, Colorado</div>
+    </div>
+    <div class="review review-placeholder">
+      <div class="review-stars">★★★★★</div>
+      <div class="review-text">"The AI setup blew me away. It knew my 1985 home needed specific tasks I never would have thought of. Already prevented what could have been a plumbing nightmare."</div>
+      <div class="review-author">Marcus T. — Homeowner, Texas</div>
+    </div>
+    <div class="review review-placeholder">
+      <div class="review-stars">★★★★★</div>
+      <div class="review-text">"I'm a landlord with 3 properties. The Pro tier's maintenance record export is worth every penny when tenants move out. Game changer."</div>
+      <div class="review-author">Jennifer K. — Property Owner, Florida</div>
+    </div>
+  </div>
+</section>
+
+<!-- FINAL CTA -->
+<section class="final-cta" id="notify">
+  <h2>Your home is waiting to be <em>properly tended</em></h2>
+  <p>Join the waitlist. Be first to know when we launch.</p>
+  <div class="final-email-form" id="finalForm">
+    <input type="email" class="final-input" id="finalEmail" placeholder="your@email.com">
+    <button class="final-btn" id="finalBtn" onclick="submitEmail('final')">Join Waitlist</button>
+  </div>
+  <div class="final-success" id="finalSuccess">🌿 You're in! We'll reach out the moment Tended is live.</div>
+  <p class="final-note">No spam. Just one email when we launch.</p>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">ten<span>ded</span></div>
+  <div class="footer-copy">© 2026 Tended. All rights reserved.</div>
+</footer>
+
+<script>
+const SURL = 'https://rkivkfmvykegnojlblpd.supabase.co';
+const SKEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJraXZrZm12eWtlZ25vamxibHBkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM3MjI5NDUsImV4cCI6MjA4OTI5ODk0NX0.EaGsMcSO_bsMJ4YAHtBc6bc75soR_100FbA1lUys3hY';
+const sb = supabase.createClient(SURL, SKEY);
+
+// Scroll nav effect
+window.addEventListener('scroll', () => {
+  document.getElementById('nav').classList.toggle('scrolled', window.scrollY > 20);
+});
+
+// Email submission
+async function submitEmail(source) {
+  const emailId = source === 'hero' ? 'heroEmail' : 'finalEmail';
+  const btnId = source === 'hero' ? 'heroBtn' : 'finalBtn';
+  const formId = source === 'hero' ? 'heroForm' : 'finalForm';
+  const successId = source === 'hero' ? 'heroSuccess' : 'finalSuccess';
+
+  const email = document.getElementById(emailId).value.trim();
+  const btn = document.getElementById(btnId);
+
+  if (!email || !email.includes('@')) {
+    document.getElementById(emailId).style.borderColor = '#c0392b';
+    setTimeout(() => document.getElementById(emailId).style.borderColor = '', 1500);
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Joining...';
+
+  try {
+    const { error } = await sb.from('waitlist').upsert({
+      email: email.toLowerCase(),
+      source: source,
+      joined_at: new Date().toISOString()
+    }, { onConflict: 'email', ignoreDuplicates: true });
+
+    if (error) throw error;
+
+    document.getElementById(formId).style.display = 'none';
+    document.getElementById(successId).classList.add('show');
+
+  } catch(e) {
+    btn.disabled = false;
+    btn.textContent = source === 'hero' ? 'Notify Me →' : 'Join Waitlist';
+    // Still show success even if duplicate
+    document.getElementById(formId).style.display = 'none';
+    document.getElementById(successId).classList.add('show');
+  }
+}
+
+// Enter key support
+['heroEmail', 'finalEmail'].forEach(id => {
+  const el = document.getElementById(id);
+  if (el) el.addEventListener('keydown', e => {
+    if (e.key === 'Enter') submitEmail(id === 'heroEmail' ? 'hero' : 'final');
+  });
+});
+
+// Animate elements on scroll
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      e.target.style.opacity = '1';
+      e.target.style.transform = 'translateY(0)';
+    }
+  });
+}, { threshold: 0.1 });
+
+document.querySelectorAll('.feat-card, .step, .review, .price-card, .problem-item, .ai-point').forEach(el => {
+  el.style.opacity = '0';
+  el.style.transform = 'translateY(24px)';
+  el.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+  observer.observe(el);
+});
+</script>
+</body>
+</html>
