@@ -558,6 +558,7 @@ const CATS = {
 };
 
 // ── BOOT ──
+let _booting = false;
 async function boot() {
   const { data: { session } } = await sb.auth.getSession();
   hideSplash();
@@ -573,15 +574,22 @@ async function boot() {
     show('screen-auth');
   }
   sb.auth.onAuthStateChange(async (evt, session) => {
-    if ((evt === 'SIGNED_IN' || evt === 'USER_UPDATED') && session?.user) {
+    if ((evt === 'SIGNED_IN') && session?.user) {
+      if (_booting) return;
+      _booting = true;
       S.user = session.user;
-      const isNewUser = await loadData();
-      if (!isNewUser) {
-        show('screen-app');
-        renderApp();
-        if (shouldShowPushPrompt()) initPush();
+      try {
+        const isNewUser = await loadData();
+        if (!isNewUser) {
+          show('screen-app');
+          renderApp();
+          if (shouldShowPushPrompt()) initPush();
+        }
+      } finally {
+        setTimeout(() => { _booting = false; }, 2000);
       }
     } else if (evt === 'SIGNED_OUT') {
+      _booting = false;
       S = { ...S, user: null, tasks: [], allTasks: [], profile: {}, tier: 'free' };
       show('screen-auth');
     }
