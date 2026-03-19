@@ -880,10 +880,11 @@ function fmtDue(task) {
 }
 
 async function completeTask(id, e) {
-  if (e) e.stopPropagation();
-  const task = S.allTasks.find(t => t.id == id);
+  if (e) { e.stopPropagation(); e.preventDefault(); }
+  const sid = String(id);
+  const task = S.allTasks.find(t => String(t.id) === sid || String(t.dbId) === sid);
   if (!task || task.locked) return;
-  const btn = document.querySelector(`[data-tc="${id}"]`);
+  const btn = document.querySelector(`[data-tc="${sid}"]`);
   if (btn) { btn.classList.add('pop'); btn.textContent = '✓'; }
   const flash = document.createElement('div'); flash.className = 'flash'; document.body.appendChild(flash);
   setTimeout(() => flash.remove(), 500);
@@ -993,8 +994,9 @@ function taskCard(task) {
   const cat = CATS[task.category];
   const dc = st==='overdue'?'ov':st==='due-soon'?'td':'up';
   if (task.locked) return `<div class="task-card locked"><span class="lock-icon">🔒</span><div class="task-info"><div class="task-name">${task.name}</div><div class="task-meta"><span class="cat-dot c-${task.category}"></span>${cat.icon} ${cat.label}</div></div></div>`;
-  return `<div class="task-card ${st}" onclick="openDetail(${task.id})">
-    <button class="task-check" data-tc="${task.id}" onclick="completeTask(${task.id},event)">✓</button>
+  const idStr = String(task.id);
+  return `<div class="task-card ${st}" onclick="openDetail('${idStr}')">
+    <button class="task-check" data-tc="${idStr}" onclick="completeTask('${idStr}',event)">✓</button>
     <div class="task-info"><div class="task-name">${task.name}</div><div class="task-meta"><span class="cat-dot c-${task.category}"></span>${cat.icon} ${cat.label}</div></div>
     <div class="task-due ${dc}">${fmtDue(task)}</div>
   </div>`;
@@ -1039,7 +1041,8 @@ function renderHistory() {
 
 // ── DETAIL MODAL ──
 function openDetail(id) {
-  const task = S.allTasks.find(t => t.id == id);
+  const sid = String(id);
+  const task = S.allTasks.find(t => String(t.id) === sid || String(t.dbId) === sid);
   if (!task || task.locked) return;
   const days = daysTil(task);
   const cat = CATS[task.category];
