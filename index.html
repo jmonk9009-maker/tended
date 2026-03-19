@@ -1229,8 +1229,8 @@ function openProfile() {
     </div>` : ''}
 
     <div style="display:grid;gap:8px;margin-top:8px;">
-      <button onclick="doSignOut()" style="width:100%;background:var(--surface2);border:none;border-radius:10px;padding:13px;font-family:'DM Sans',sans-serif;font-size:0.88rem;font-weight:500;cursor:pointer;">Sign out</button>
-      <button onclick="deleteAccount()" style="width:100%;background:none;border:none;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:0.78rem;cursor:pointer;padding:8px;">Delete account</button>
+      <button onclick="closeModal('profileModal'); doSignOut();" style="width:100%;background:var(--surface2);border:none;border-radius:10px;padding:13px;font-family:'DM Sans',sans-serif;font-size:0.88rem;font-weight:500;cursor:pointer;">Sign out</button>
+      <button onclick="closeModal('profileModal'); deleteAccount();" style="width:100%;background:none;border:none;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:0.78rem;cursor:pointer;padding:8px;">Delete account</button>
     </div>
   `;
   openModal('profileModal');
