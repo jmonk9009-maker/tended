@@ -558,12 +558,13 @@ const CATS = {
 };
 
 // ── BOOT ──
-let _booting = false;
+let _lastUserId = null;
 async function boot() {
   const { data: { session } } = await sb.auth.getSession();
   hideSplash();
   if (session?.user) {
     S.user = session.user;
+    _lastUserId = session.user.id;
     const isNewUser = await loadData();
     if (!isNewUser) {
       show('screen-app');
@@ -574,23 +575,23 @@ async function boot() {
     show('screen-auth');
   }
   sb.auth.onAuthStateChange(async (evt, session) => {
-    if ((evt === 'SIGNED_IN') && session?.user) {
-      if (_booting) return;
-      _booting = true;
+    if (evt === 'SIGNED_IN' && session?.user) {
+      if (_lastUserId === session.user.id) return;
+      _lastUserId = session.user.id;
       S.user = session.user;
-      try {
-        const isNewUser = await loadData();
-        if (!isNewUser) {
-          show('screen-app');
-          renderApp();
-          if (shouldShowPushPrompt()) initPush();
-        }
-      } finally {
-        setTimeout(() => { _booting = false; }, 2000);
+      const isNewUser = await loadData();
+      if (!isNewUser) {
+        show('screen-app');
+        renderApp();
+        if (shouldShowPushPrompt()) initPush();
       }
     } else if (evt === 'SIGNED_OUT') {
-      _booting = false;
-      S = { ...S, user: null, tasks: [], allTasks: [], profile: {}, tier: 'free' };
+      _lastUserId = null;
+      S.user = null;
+      S.tier = 'free';
+      S.allTasks = [];
+      S.tasks = [];
+      S.profile = {};
       show('screen-auth');
     }
   });
@@ -1227,6 +1228,54 @@ function openUpgrade(ctx = '') {
   openModal('upgradeModal');
 }
 
+// ── SHARE LINKS ──
+async function generateShareLink() {
+  if (!S.user || S.tier !== 'pro') return;
+  const btn = document.getElementById('shareLinkBtn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Generating...'; }
+
+  try {
+    const token = crypto.randomUUID().replace(/-/g, '');
+    const expires = new Date();
+    expires.setDate(expires.getDate() + 30);
+
+    // Revoke any existing links first
+    await sb.from('share_links').delete().eq('user_id', S.user.id);
+
+    // Create new link
+    const { error } = await sb.from('share_links').insert({
+      user_id: S.user.id,
+      token,
+      expires_at: expires.toISOString()
+    });
+    if (error) throw error;
+
+    const url = `https://usetended.com/share/${token}`;
+    await navigator.clipboard.writeText(url);
+    toast('Share link copied to clipboard!');
+    openProfile(); // refresh profile to show new link
+  } catch(e) {
+    toast('Could not generate link. Try again.');
+    if (btn) { btn.disabled = false; btn.textContent = 'Generate Share Link'; }
+  }
+}
+
+async function revokeShareLink() {
+  if (!confirm('Revoke this share link? Anyone with the link will lose access.')) return;
+  await sb.from('share_links').delete().eq('user_id', S.user.id);
+  toast('Share link revoked.');
+  openProfile();
+}
+
+async function getExistingShareLink() {
+  if (!S.user) return null;
+  const { data } = await sb.from('share_links')
+    .select('*').eq('user_id', S.user.id).single();
+  if (!data) return null;
+  if (new Date(data.expires_at) < new Date()) return null;
+  return data;
+}
+
 // ── STRIPE ──
 const STRIPE_PRICES = {
   home_monthly: 'price_1TCaeNCSeR0nltLO6W9x8ZQh',
@@ -1339,6 +1388,14 @@ function openProfile() {
         <button onclick="cancelSubscription()" style="width:100%;background:var(--red-light);color:var(--red);border:none;border-radius:10px;padding:13px;font-family:'DM Sans',sans-serif;font-size:0.88rem;font-weight:500;cursor:pointer;text-align:left;">Cancel subscription</button>
       </div>
     </div>` : ''}
+    ${S.tier === 'pro' ? `
+    <div style="margin-bottom:24px;" id="shareLinkSection">
+      <div class="f-label">Shareable Home Record</div>
+      <div style="background:var(--surface2);border-radius:10px;padding:14px 16px;">
+        <div style="font-size:0.82rem;color:var(--muted);margin-bottom:12px;">Share your verified maintenance history with buyers, agents, or tenants. Links expire after 30 days.</div>
+        <div style="display:grid;gap:8px;" id="shareLinkContent">Loading...</div>
+      </div>
+    </div>` : ''}
 
     <div style="display:grid;gap:8px;margin-top:8px;">
       <button onclick="closeModal('profileModal'); doSignOut();" style="width:100%;background:var(--surface2);border:none;border-radius:10px;padding:13px;font-family:'DM Sans',sans-serif;font-size:0.88rem;font-weight:500;cursor:pointer;">Sign out</button>
@@ -1346,6 +1403,27 @@ function openProfile() {
     </div>
   `;
   openModal('profileModal');
+
+  // Load share link status async (Pro only)
+  if (S.tier === 'pro') {
+    getExistingShareLink().then(link => {
+      const el = document.getElementById('shareLinkContent');
+      if (!el) return;
+      if (link) {
+        const url = `https://usetended.com/share/${link.token}`;
+        const exp = new Date(link.expires_at).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+        el.innerHTML = `
+          <div style="font-size:0.78rem;background:var(--green-light);border-radius:8px;padding:10px 12px;word-break:break-all;color:var(--green);font-weight:500;">${url}</div>
+          <div style="font-size:0.72rem;color:var(--muted);">Expires ${exp}</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px;">
+            <button onclick="navigator.clipboard.writeText('${url}');toast('Copied!');" style="background:var(--green);color:#fff;border:none;border-radius:8px;padding:9px;font-family:'DM Sans',sans-serif;font-size:0.8rem;font-weight:600;cursor:pointer;">Copy Link</button>
+            <button onclick="revokeShareLink()" style="background:var(--red-light);color:var(--red);border:none;border-radius:8px;padding:9px;font-family:'DM Sans',sans-serif;font-size:0.8rem;font-weight:500;cursor:pointer;">Revoke</button>
+          </div>`;
+      } else {
+        el.innerHTML = `<button id="shareLinkBtn" onclick="generateShareLink()" style="width:100%;background:var(--green);color:#fff;border:none;border-radius:8px;padding:11px;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:600;cursor:pointer;">Generate Share Link →</button>`;
+      }
+    });
+  }
 }
 
 async function resetHomeProfile() {

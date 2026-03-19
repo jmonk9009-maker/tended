@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Home Maintenance Record — Tended</title>
+<meta name="description" content="Verified home maintenance history powered by Tended.">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap');
+:root {
+  --green: #2d5a3d; --green-light: #eef4f0; --gold: #8a6020;
+  --ink: #1a1710; --muted: #7a7060; --border: #e0d8cc;
+  --bg: #f8f5ef; --white: #ffffff;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--ink); font-family: 'DM Sans', sans-serif; line-height: 1.6; }
+nav {
+  background: rgba(248,245,239,0.95); backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border); padding: 16px 24px;
+  display: flex; align-items: center; justify-content: space-between;
+  position: sticky; top: 0; z-index: 10;
+}
+.nav-logo { font-family: 'Lora', serif; font-size: 1.2rem; font-weight: 600; color: var(--green); text-decoration: none; }
+.nav-cta { background: var(--green); color: #fff; border: none; border-radius: 8px; padding: 8px 18px; font-family: 'DM Sans', sans-serif; font-size: 0.82rem; font-weight: 600; cursor: pointer; text-decoration: none; }
+.container { max-width: 720px; margin: 0 auto; padding: 40px 24px 80px; }
+.record-header { background: var(--white); border: 1px solid var(--border); border-radius: 16px; padding: 28px; margin-bottom: 24px; }
+.record-badge { display: inline-flex; align-items: center; gap: 6px; background: var(--green-light); border: 1px solid rgba(45,90,61,0.2); border-radius: 20px; padding: 4px 12px; font-size: 0.72rem; font-weight: 600; color: var(--green); letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 16px; }
+.record-title { font-family: 'Lora', serif; font-size: 1.6rem; font-weight: 600; margin-bottom: 6px; }
+.record-meta { font-size: 0.82rem; color: var(--muted); }
+.record-insight { background: var(--green-light); border-left: 3px solid var(--green); border-radius: 0 10px 10px 0; padding: 14px 18px; margin-top: 16px; font-size: 0.88rem; color: var(--green); }
+.pdf-btn { display: inline-flex; align-items: center; gap: 8px; margin-top: 18px; background: var(--green); color: #fff; border: none; border-radius: 10px; padding: 10px 20px; font-family: 'DM Sans', sans-serif; font-size: 0.85rem; font-weight: 600; cursor: pointer; text-decoration: none; }
+.pdf-btn:hover { background: #245030; }
+.section-label { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 12px; margin-top: 28px; }
+.task-block { background: var(--white); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 12px; overflow: hidden; }
+.task-head { padding: 16px 18px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; }
+.task-name { font-weight: 600; font-size: 0.92rem; }
+.task-count { font-size: 0.75rem; color: var(--muted); background: var(--bg); border-radius: 20px; padding: 2px 10px; }
+.task-body { border-top: 1px solid var(--border); padding: 16px 18px; display: none; }
+.task-body.open { display: block; }
+.hist-item { display: flex; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.hist-item:last-child { border-bottom: none; }
+.hist-dot { width: 8px; height: 8px; background: var(--green); border-radius: 50%; margin-top: 6px; flex-shrink: 0; }
+.hist-date { font-size: 0.82rem; font-weight: 600; }
+.hist-note { font-size: 0.78rem; color: var(--muted); margin-top: 2px; }
+.photo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 8px; }
+.photo-thumb { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 8px; cursor: pointer; }
+.empty { text-align: center; padding: 60px 24px; color: var(--muted); }
+.expired { text-align: center; padding: 80px 24px; }
+.expired h2 { font-family: 'Lora', serif; font-size: 1.4rem; margin-bottom: 12px; }
+.stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 24px; }
+.stat-box { background: var(--white); border: 1px solid var(--border); border-radius: 12px; padding: 16px; text-align: center; }
+.stat-num { font-family: 'Lora', serif; font-size: 1.8rem; font-weight: 600; color: var(--green); }
+.stat-label { font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; margin-top: 2px; }
+.loading { text-align: center; padding: 80px 24px; color: var(--muted); }
+@media(max-width:480px) { .stats-row { grid-template-columns: repeat(3,1fr); } }
+</style>
+</head>
+<body>
+<nav>
+  <a href="/" class="nav-logo">tended</a>
+  <a href="/app" class="nav-cta">Get the App →</a>
+</nav>
+<div class="container" id="content">
+  <div class="loading">Loading maintenance record...</div>
+</div>
+
+<script>
+const SURL = 'https://rkivkfmvykegnojlblpd.supabase.co';
+const SKEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJraXZrZm12eWtlZ25vamxibHBkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM3MjI5NDUsImV4cCI6MjA4OTI5ODk0NX0.EaGsMcSO_bsMJ4YAHtBc6bc75soR_100FbA1lUys3hY';
+const sb = supabase.createClient(SURL, SKEY);
+
+async function load() {
+  const token = window.location.pathname.split('/share/')[1]?.split('?')[0];
+  if (!token) { showError('Invalid link.'); return; }
+
+  // Look up share link
+  const { data: link } = await sb.from('share_links')
+    .select('*').eq('token', token).single();
+
+  if (!link) { showError('This link is invalid or has been revoked.'); return; }
+
+  // Check expiry
+  const expires = new Date(link.expires_at);
+  if (expires < new Date()) {
+    document.getElementById('content').innerHTML = `
+      <div class="expired">
+        <div style="font-size:3rem;margin-bottom:16px;">🔒</div>
+        <h2>This link has expired</h2>
+        <p style="color:var(--muted);margin-bottom:24px;">Maintenance record links expire after 30 days. Ask the homeowner to generate a new one.</p>
+        <a href="/app" class="pdf-btn">Get Tended →</a>
+      </div>`;
+    return;
+  }
+
+  // Load tasks and history
+  const { data: tasks } = await sb.from('tasks')
+    .select('*').eq('user_id', link.user_id).eq('locked', false).order('created_at');
+
+  const { data: history } = await sb.from('task_history')
+    .select('*').eq('user_id', link.user_id).order('completed_date', { ascending: false });
+
+  const { data: profile } = await sb.from('home_profiles')
+    .select('*').eq('user_id', link.user_id).single();
+
+  if (!tasks) { showError('No data found.'); return; }
+
+  const totalCompletions = history?.length || 0;
+  const tasksWithHistory = tasks.filter(t => history?.some(h => h.task_id === t.id)).length;
+  const photos = history?.flatMap(h => h.photos || []).length || 0;
+
+  const homeDesc = profile ? [
+    profile.home_type?.charAt(0).toUpperCase() + profile.home_type?.slice(1),
+    profile.hvac,
+    profile.year_built ? `Built ${profile.year_built}` : null
+  ].filter(Boolean).join(' · ') : 'Home';
+
+  const tasksHtml = tasks.map(task => {
+    const taskHistory = (history || []).filter(h => h.task_id === task.id);
+    if (!taskHistory.length) return '';
+    const histHtml = taskHistory.map(h => {
+      const photosHtml = (h.photos || []).length ? `
+        <div class="photo-grid">
+          ${(h.photos || []).map(url => `<img src="${url}" class="photo-thumb" onclick="window.open('${url}','_blank')">`).join('')}
+        </div>` : '';
+      return `<div class="hist-item">
+        <div class="hist-dot"></div>
+        <div>
+          <div class="hist-date">${h.completed_date}</div>
+          ${h.note ? `<div class="hist-note">${h.note}</div>` : ''}
+          ${photosHtml}
+        </div>
+      </div>`;
+    }).join('');
+    return `<div class="task-block">
+      <div class="task-head" onclick="this.nextElementSibling.classList.toggle('open')">
+        <div class="task-name">${task.name}</div>
+        <span class="task-count">${taskHistory.length} completion${taskHistory.length>1?'s':''}</span>
+      </div>
+      <div class="task-body">${histHtml}</div>
+    </div>`;
+  }).filter(Boolean).join('');
+
+  document.getElementById('content').innerHTML = `
+    <div class="record-header">
+      <div class="record-badge">✓ Verified Maintenance Record</div>
+      <div class="record-title">${homeDesc}</div>
+      <div class="record-meta">Generated ${new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})} · Expires ${expires.toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})}</div>
+      <button class="pdf-btn" onclick="exportPDF()">⬇ Download PDF Report</button>
+    </div>
+    <div class="stats-row">
+      <div class="stat-box"><div class="stat-num">${tasks.length}</div><div class="stat-label">Tasks tracked</div></div>
+      <div class="stat-box"><div class="stat-num">${totalCompletions}</div><div class="stat-label">Completions</div></div>
+      <div class="stat-box"><div class="stat-num">${photos}</div><div class="stat-label">Photos on file</div></div>
+    </div>
+    <div class="section-label">Completion History by Task</div>
+    ${tasksHtml || '<div style="color:var(--muted);font-size:0.85rem;padding:12px 0;">No completions recorded yet.</div>'}
+    <div style="margin-top:40px;padding:20px;background:var(--green-light);border-radius:12px;text-align:center;">
+      <div style="font-size:0.82rem;color:var(--green);font-weight:500;">This record was generated by <strong>Tended</strong> — the smart home maintenance app.</div>
+      <a href="/app" style="display:inline-block;margin-top:10px;font-size:0.8rem;color:var(--green);font-weight:600;">Get Tended for your home →</a>
+    </div>`;
+
+  // Store data for PDF export
+  window._shareData = { tasks, history, profile, homeDesc, totalCompletions, photos };
+}
+
+function exportPDF() {
+  const { tasks, history, homeDesc } = window._shareData;
+  const rows = tasks.map(task => {
+    const taskHistory = (history || []).filter(h => h.task_id === task.id);
+    if (!taskHistory.length) return '';
+    const histRows = taskHistory.map(h => {
+      const photoCount = (h.photos || []).length;
+      return `<tr><td style="padding:6px 12px;font-size:12px;color:#666;">${h.completed_date}</td><td style="padding:6px 12px;font-size:12px;">${h.note||'—'}</td><td style="padding:6px 12px;font-size:12px;">${photoCount ? photoCount + ' photo(s)' : '—'}</td></tr>`;
+    }).join('');
+    return `<tr style="background:#f5f5f5;"><td colspan="3" style="padding:10px 12px;font-weight:600;font-size:13px;">${task.name}</td></tr>${histRows}`;
+  }).filter(Boolean).join('');
+
+  const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${homeDesc} — Maintenance Record</title>
+  <style>body{font-family:-apple-system,sans-serif;padding:40px;color:#1a1a1a;}h1{font-size:20px;margin-bottom:4px;}
+  .meta{color:#666;font-size:12px;margin-bottom:24px;}table{width:100%;border-collapse:collapse;}
+  th{text-align:left;padding:8px 12px;background:#eef4f0;font-size:11px;text-transform:uppercase;letter-spacing:0.05em;}
+  .footer{margin-top:32px;font-size:11px;color:#999;border-top:1px solid #eee;padding-top:12px;}
+  .badge{display:inline-block;background:#eef4f0;color:#2d5a3d;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;margin-bottom:12px;}
+  </style></head><body>
+  <div class="badge">✓ Verified Maintenance Record</div>
+  <h1>${homeDesc}</h1>
+  <div class="meta">Generated ${new Date().toLocaleDateString()} · Powered by Tended (usetended.com)</div>
+  <table><thead><tr><th>Date</th><th>Notes</th><th>Photos</th></tr></thead><tbody>${rows||'<tr><td colspan="3" style="padding:12px;color:#999;">No history recorded.</td></tr>'}</tbody></table>
+  <div class="footer">This record was generated and verified by Tended — usetended.com</div>
+  </body></html>`;
+
+  const blob = new Blob([html], { type: 'text/html' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'home-maintenance-record.html'; a.click();
+  URL.revokeObjectURL(url);
+}
+
+function showError(msg) {
+  document.getElementById('content').innerHTML = `<div class="expired"><div style="font-size:3rem;margin-bottom:16px;">🏠</div><h2>${msg}</h2><a href="/app" class="pdf-btn" style="margin-top:20px;display:inline-flex;">Get Tended →</a></div>`;
+}
+
+load();
+</script>
+</body>
+</html>
