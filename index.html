@@ -550,20 +550,24 @@ async function boot() {
   hideSplash();
   if (session?.user) {
     S.user = session.user;
-    await loadData();
-    show('screen-app');
-    renderApp();
-    if (shouldShowPushPrompt()) initPush();
+    const isNewUser = await loadData();
+    if (!isNewUser) {
+      show('screen-app');
+      renderApp();
+      if (shouldShowPushPrompt()) initPush();
+    }
   } else {
     show('screen-auth');
   }
   sb.auth.onAuthStateChange(async (evt, session) => {
     if ((evt === 'SIGNED_IN' || evt === 'USER_UPDATED') && session?.user) {
       S.user = session.user;
-      await loadData();
-      show('screen-app');
-      renderApp();
-      if (shouldShowPushPrompt()) initPush();
+      const isNewUser = await loadData();
+      if (!isNewUser) {
+        show('screen-app');
+        renderApp();
+        if (shouldShowPushPrompt()) initPush();
+      }
     } else if (evt === 'SIGNED_OUT') {
       S = { ...S, user: null, tasks: [], allTasks: [], profile: {}, tier: 'free' };
       show('screen-auth');
@@ -652,9 +656,10 @@ async function loadData() {
     S.tier = user?.user_metadata?.tier || 'free';
 
     if (!profile && S.allTasks.length === 0) {
-      show('screen-setup'); return;
+      show('screen-setup'); return true;
     }
-  } catch(e) { console.error(e); }
+    return false;
+  } catch(e) { console.error(e); return false; }
   finally { setSyncing(false); }
 }
 
