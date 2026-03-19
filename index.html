@@ -558,7 +558,7 @@ async function boot() {
     show('screen-auth');
   }
   sb.auth.onAuthStateChange(async (evt, session) => {
-    if (evt === 'SIGNED_IN' && session?.user) {
+    if ((evt === 'SIGNED_IN' || evt === 'USER_UPDATED') && session?.user) {
       S.user = session.user;
       await loadData();
       show('screen-app');
@@ -599,9 +599,9 @@ async function doAuth() {
     if (authMode === 'signup') {
       const pwc = document.getElementById('authPwC').value;
       if (pw !== pwc) { showAuthMsg('Passwords do not match.', false); btn.disabled = false; btn.textContent = 'Create Account →'; return; }
-      const { error } = await sb.auth.signUp({ email, password: pw });
+      const { error } = await sb.auth.signUp({ email, password: pw, options: { emailRedirectTo: 'https://usetended.com' } });
       if (error) throw error;
-      showAuthMsg('Check your email to confirm, then sign in.', true);
+      showAuthMsg('✅ Check your email and click the confirmation link — you\'ll be taken straight into the app!', true);
       btn.disabled = false; btn.textContent = 'Create Account →';
     } else {
       const { error } = await sb.auth.signInWithPassword({ email, password: pw });
