@@ -2,1535 +2,1202 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>Tended — Home Maintenance</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tended — Your Home, Always Tended</title>
+<meta name="description" content="The simple home maintenance app that tells you exactly what to do and when. Never miss a filter change, gutter clean, or safety check again.">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=DM+Sans:wght@300;400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap');
 
 :root {
-  --bg: #f7f4ef;
-  --surface: #ffffff;
-  --surface2: #f0ece4;
-  --border: #e2dbd0;
-  --ink: #1c1a16;
-  --muted: #8a8070;
-  --green: #3a6b4a;
+  --green: #2d5a3d;
+  --green-mid: #3a6b4a;
   --green-light: #eef4f0;
-  --green-mid: #c2d9c9;
-  --red: #c0392b;
-  --red-light: #fdf0ee;
-  --amber: #b07d2a;
-  --amber-light: #fdf5e6;
-  --gold: #9a6f2a;
+  --green-pale: #f4f9f5;
+  --gold: #8a6020;
   --gold-light: #fdf6e8;
-  --radius: 12px;
-  --shadow: 0 2px 12px rgba(28,26,22,0.08);
+  --ink: #1a1710;
+  --muted: #7a7060;
+  --border: #e0d8cc;
+  --bg: #f8f5ef;
+  --white: #ffffff;
+  --red: #c0392b;
 }
 
-* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
 
 body {
   background: var(--bg);
   color: var(--ink);
   font-family: 'DM Sans', sans-serif;
-  min-height: 100vh;
-  max-width: 430px;
-  margin: 0 auto;
   overflow-x: hidden;
+  line-height: 1.6;
 }
 
-.screen { display: none; min-height: 100vh; flex-direction: column; }
-.screen.active { display: flex; }
-
-/* SPLASH */
-#splash {
-  position: fixed; inset: 0; background: var(--green); z-index: 9999;
-  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px;
-  transition: opacity 0.4s;
+/* ── NOISE TEXTURE ── */
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");
+  pointer-events: none; z-index: 0; opacity: 0.6;
 }
-#splash.out { opacity: 0; pointer-events: none; }
-.splash-logo { font-family: 'Lora', serif; font-size: 3rem; font-weight: 600; color: #fff; letter-spacing: -0.02em; }
-.splash-logo span { font-style: italic; font-weight: 400; }
-.splash-spin { width: 28px; height: 28px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.8s linear infinite; }
-@keyframes spin { to { transform: rotate(360deg); } }
 
-/* AUTH */
-#screen-auth { background: var(--bg); }
-.auth-top { background: var(--green); padding: 60px 28px 40px; text-align: center; color: #fff; }
-.auth-logo { font-family: 'Lora', serif; font-size: 2.4rem; font-weight: 600; letter-spacing: -0.02em; }
-.auth-logo span { font-style: italic; font-weight: 400; }
-.auth-tag { font-size: 0.82rem; opacity: 0.6; margin-top: 4px; }
-.auth-body { padding: 32px 28px; flex: 1; }
-.auth-switcher { display: flex; background: var(--surface2); border-radius: 10px; padding: 4px; margin-bottom: 28px; gap: 4px; }
-.auth-sw-btn { flex: 1; background: none; border: none; padding: 10px; font-family: 'DM Sans', sans-serif; font-size: 0.88rem; font-weight: 500; color: var(--muted); cursor: pointer; border-radius: 8px; transition: all 0.15s; }
-.auth-sw-btn.active { background: #fff; color: var(--ink); font-weight: 600; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
-.auth-msg { padding: 10px 14px; border-radius: 8px; font-size: 0.82rem; margin-bottom: 16px; display: none; }
-.auth-msg.show { display: block; }
-.auth-msg.err { background: var(--red-light); color: var(--red); }
-.auth-msg.ok { background: var(--green-light); color: var(--green); }
-.auth-foot { padding: 0 28px 40px; }
+/* ── NAV ── */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 20px 40px;
+  background: rgba(248,245,239,0.92);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.3s;
+}
 
-/* FORMS */
-.f-group { margin-bottom: 18px; }
-.f-label { font-size: 0.78rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; display: block; }
-.f-input { width: 100%; background: var(--surface); border: 2px solid var(--border); border-radius: 10px; padding: 13px 14px; font-family: 'DM Sans', sans-serif; font-size: 0.95rem; color: var(--ink); outline: none; transition: border-color 0.15s; }
-.f-input:focus { border-color: var(--green); }
-.f-select { width: 100%; background: var(--surface); border: 2px solid var(--border); border-radius: 10px; padding: 13px 14px; font-family: 'DM Sans', sans-serif; font-size: 0.95rem; color: var(--ink); outline: none; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238a8070' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px; cursor: pointer; transition: border-color 0.15s; }
-.f-select:focus { border-color: var(--green); }
+nav.scrolled { border-bottom-color: var(--border); }
 
-/* BUTTONS */
-.btn { width: 100%; border: none; border-radius: var(--radius); padding: 15px 24px; font-family: 'DM Sans', sans-serif; font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; justify-content: center; gap: 8px; }
-.btn:active { transform: scale(0.98); }
-.btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-.btn-green { background: var(--green); color: #fff; }
-.btn-green:hover:not(:disabled) { background: #2d5a3d; }
-.btn-surface { background: var(--surface2); color: var(--muted); }
-.btn-surface:hover { background: var(--border); color: var(--ink); }
-.btn-white { background: #fff; color: var(--green); }
-.btn-white:hover { background: #f0f0ee; }
+.nav-logo {
+  font-family: 'Lora', serif;
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: var(--green);
+  letter-spacing: -0.02em;
+  text-decoration: none;
+}
 
-/* SETUP */
-#screen-setup { background: var(--bg); }
-.setup-top { background: var(--green); padding: 56px 28px 32px; color: #fff; }
-.back-pill { background: rgba(255,255,255,0.15); border: none; color: #fff; font-size: 0.8rem; padding: 5px 14px; border-radius: 20px; cursor: pointer; margin-bottom: 18px; display: inline-flex; align-items: center; gap: 5px; font-family: 'DM Sans', sans-serif; }
-.setup-h { font-family: 'Lora', serif; font-size: 1.6rem; font-weight: 600; line-height: 1.2; letter-spacing: -0.02em; }
-.setup-h em { font-style: italic; font-weight: 400; }
-.setup-sub { font-size: 0.86rem; color: rgba(255,255,255,0.68); margin-top: 8px; line-height: 1.5; }
-.setup-body { padding: 26px 28px; flex: 1; overflow-y: auto; }
-.setup-foot { padding: 16px 28px 36px; }
-.opt-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.opt-grid.three { grid-template-columns: 1fr 1fr 1fr; }
-.opt-btn { background: var(--surface); border: 2px solid var(--border); border-radius: 10px; padding: 14px 10px; cursor: pointer; text-align: center; transition: all 0.15s; font-family: 'DM Sans', sans-serif; }
-.opt-btn .oi { font-size: 1.4rem; margin-bottom: 6px; }
-.opt-btn .ol { font-size: 0.8rem; font-weight: 500; color: var(--ink); }
-.opt-btn.on { border-color: var(--green); background: var(--green-light); }
-.opt-btn.on .ol { color: var(--green); }
-.grp { margin-bottom: 22px; }
+.nav-logo span { font-style: italic; font-weight: 400; }
 
-/* AI LOADING */
-#screen-ai { background: var(--green); align-items: center; justify-content: center; text-align: center; padding: 40px; gap: 24px; }
-.ai-spin { width: 56px; height: 56px; border: 3px solid rgba(255,255,255,0.2); border-top-color: #fff; border-radius: 50%; animation: spin 0.9s linear infinite; }
-.ai-h { font-family: 'Lora', serif; font-size: 1.5rem; font-weight: 600; color: #fff; letter-spacing: -0.02em; }
-.ai-h em { font-style: italic; font-weight: 400; }
-.ai-sub { color: rgba(255,255,255,0.65); font-size: 0.86rem; line-height: 1.6; max-width: 280px; }
-.ai-dots { display: flex; gap: 8px; justify-content: center; }
-.ai-dot { width: 8px; height: 8px; background: rgba(255,255,255,0.4); border-radius: 50%; animation: dp 1.4s ease-in-out infinite; }
-.ai-dot:nth-child(2) { animation-delay: 0.2s; }
-.ai-dot:nth-child(3) { animation-delay: 0.4s; }
-@keyframes dp { 0%,80%,100% { transform: scale(0.7); background: rgba(255,255,255,0.3); } 40% { transform: scale(1); background: rgba(255,255,255,0.9); } }
+.nav-cta {
+  background: var(--green);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 22px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-decoration: none;
+  display: inline-block;
+}
 
-/* BUNDLES */
-#screen-bundles { background: var(--bg); }
-.bundles-top { background: var(--green); padding: 56px 28px 32px; color: #fff; }
-.ai-pill { display: inline-flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.15); border-radius: 20px; padding: 4px 12px; font-size: 0.7rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: rgba(255,255,255,0.9); margin-bottom: 14px; }
-.bundles-body { padding: 22px 28px; flex: 1; overflow-y: auto; }
-.bundles-foot { padding: 16px 28px 36px; }
-.insight-box { background: var(--green-light); border: 1px solid var(--green-mid); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 20px; font-size: 0.84rem; color: var(--green); line-height: 1.6; }
-.bundle-card { background: var(--surface); border: 2px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 10px; cursor: pointer; transition: all 0.15s; }
-.bundle-card.on { border-color: var(--green); background: var(--green-light); }
-.bc-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
-.bc-left { display: flex; align-items: center; gap: 12px; }
-.bc-icon { width: 38px; height: 38px; background: var(--surface2); border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0; }
-.bundle-card.on .bc-icon { background: var(--green-mid); }
-.bc-name { font-weight: 600; font-size: 0.92rem; }
-.bc-cnt { font-size: 0.76rem; color: var(--muted); margin-top: 2px; }
-.bc-check { width: 22px; height: 22px; border: 2px solid var(--border); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; color: transparent; transition: all 0.15s; flex-shrink: 0; }
-.bundle-card.on .bc-check { background: var(--green); border-color: var(--green); color: #fff; }
-.bc-chips { display: flex; flex-wrap: wrap; gap: 5px; }
-.bc-chip { background: var(--surface2); color: var(--muted); font-size: 0.7rem; padding: 3px 9px; border-radius: 20px; }
-.bundle-card.on .bc-chip { background: var(--green-mid); color: var(--green); }
-.ai-tag { background: rgba(58,107,74,0.12); color: var(--green); font-size: 0.62rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; padding: 2px 7px; border-radius: 4px; }
+.nav-cta:hover { background: #245030; transform: translateY(-1px); }
 
-/* MAIN APP */
-#screen-app { background: var(--bg); }
-.app-head { background: var(--surface); padding: 50px 20px 0; border-bottom: 1px solid var(--border); }
-.app-top { display: flex; align-items: center; justify-content: space-between; padding-bottom: 16px; }
-.app-logo { font-family: 'Lora', serif; font-size: 1.4rem; font-weight: 600; color: var(--green); letter-spacing: -0.02em; }
-.app-logo span { font-style: italic; font-weight: 400; }
-.hdr-btns { display: flex; gap: 8px; align-items: center; }
-.icon-btn { width: 36px; height: 36px; background: var(--surface2); border: none; border-radius: 9px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.95rem; transition: all 0.15s; }
-.icon-btn:hover { background: var(--border); }
-.sync-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); display: inline-block; animation: sdp 2s ease-in-out infinite; }
-@keyframes sdp { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
-.sync-lbl { font-size: 0.68rem; color: var(--amber); }
-.nav-tabs { display: flex; gap: 2px; }
-.nav-tab { flex: 1; background: none; border: none; padding: 10px 8px; font-family: 'DM Sans', sans-serif; font-size: 0.8rem; font-weight: 500; color: var(--muted); cursor: pointer; border-radius: 8px 8px 0 0; transition: all 0.15s; text-align: center; border-bottom: 2px solid transparent; }
-.nav-tab.active { color: var(--green); font-weight: 600; border-bottom-color: var(--green); }
-.app-body { flex: 1; overflow-y: auto; padding: 20px 20px 100px; }
+/* ── HERO ── */
+.hero {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 120px 24px 80px;
+  position: relative;
+  overflow: hidden;
+}
 
-/* COVERAGE BAR */
-.coverage-bar { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 18px; }
-.cov-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
-.cov-label { font-size: 0.8rem; font-weight: 600; color: var(--ink); }
-.cov-pct { font-size: 0.8rem; font-weight: 700; color: var(--green); }
-.cov-track { height: 6px; background: var(--surface2); border-radius: 3px; overflow: hidden; margin-bottom: 8px; }
-.cov-fill { height: 100%; background: var(--green); border-radius: 3px; transition: width 0.6s ease; }
-.cov-msg { font-size: 0.76rem; color: var(--muted); line-height: 1.5; }
-.cov-msg strong { color: var(--ink); }
-.cov-upgrade { display: inline-flex; align-items: center; gap: 4px; background: var(--green); color: #fff; font-size: 0.72rem; font-weight: 600; padding: 4px 12px; border-radius: 20px; cursor: pointer; border: none; font-family: 'DM Sans', sans-serif; margin-top: 6px; }
+.hero-bg {
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(58,107,74,0.08) 0%, transparent 70%);
+  pointer-events: none;
+}
 
-/* TASK CARDS */
-.section-hdr { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
-.section-lbl { font-size: 0.7rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); display: flex; align-items: center; gap: 6px; }
-.cnt-badge { background: var(--red); color: #fff; font-size: 0.62rem; font-weight: 700; padding: 1px 6px; border-radius: 10px; }
-.cnt-badge.g { background: var(--green); }
-.cnt-badge.a { background: var(--amber); }
-.task-grp { margin-bottom: 24px; }
-.task-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 13px 14px; margin-bottom: 7px; display: flex; align-items: center; gap: 11px; cursor: pointer; transition: all 0.15s; }
-.task-card:hover { box-shadow: var(--shadow); }
-.task-card.overdue { border-left: 3px solid var(--red); }
-.task-card.due-soon { border-left: 3px solid var(--amber); }
-.task-card.upcoming { border-left: 3px solid var(--green); }
-.task-card.locked { opacity: 0.45; cursor: default; filter: blur(0.3px); }
-.task-check { width: 26px; height: 26px; border: 2px solid var(--border); border-radius: 50%; background: none; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.2s; font-size: 0.75rem; color: transparent; }
-.task-check:hover { border-color: var(--green); background: var(--green-light); color: var(--green); }
-.task-check.pop { border-color: var(--green); background: var(--green); color: #fff; animation: popit 0.3s ease; }
-@keyframes popit { 0% { transform: scale(1); } 50% { transform: scale(1.3); } 100% { transform: scale(1); } }
-.task-info { flex: 1; min-width: 0; }
-.task-name { font-weight: 500; font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.task-meta { font-size: 0.73rem; color: var(--muted); margin-top: 3px; display: flex; align-items: center; gap: 6px; }
-.cat-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
-.c-hvac { background: #4a90d9; } .c-plumbing { background: #5ba4b5; } .c-exterior { background: #7cb87a; }
-.c-kitchen { background: #d4a855; } .c-safety { background: #d46b4a; } .c-general { background: #a08060; }
-.task-due { font-size: 0.73rem; font-weight: 600; white-space: nowrap; }
-.task-due.ov { color: var(--red); } .task-due.td { color: var(--amber); } .task-due.up { color: var(--muted); }
-.lock-icon { font-size: 0.9rem; flex-shrink: 0; }
+.hero-leaf {
+  position: absolute;
+  font-size: 8rem;
+  opacity: 0.04;
+  pointer-events: none;
+  animation: leafFloat 8s ease-in-out infinite;
+}
 
-/* LOCKED SECTION */
-.locked-section { background: var(--surface); border: 1px dashed var(--border); border-radius: var(--radius); padding: 18px; margin-bottom: 24px; text-align: center; }
-.locked-section h4 { font-size: 0.92rem; font-weight: 600; margin-bottom: 6px; }
-.locked-section p { font-size: 0.82rem; color: var(--muted); line-height: 1.5; margin-bottom: 14px; }
-.locked-preview { display: flex; flex-wrap: wrap; gap: 5px; justify-content: center; margin-bottom: 14px; }
-.locked-chip { background: var(--surface2); color: var(--muted); font-size: 0.72rem; padding: 3px 10px; border-radius: 20px; filter: blur(2px); user-select: none; }
+.hero-leaf:nth-child(1) { top: 10%; left: 5%; animation-delay: 0s; }
+.hero-leaf:nth-child(2) { top: 20%; right: 8%; animation-delay: 2s; font-size: 5rem; }
+.hero-leaf:nth-child(3) { bottom: 20%; left: 10%; animation-delay: 4s; font-size: 6rem; }
+.hero-leaf:nth-child(4) { bottom: 15%; right: 5%; animation-delay: 6s; font-size: 4rem; }
 
-/* EMPTY */
-.empty { text-align: center; padding: 40px 20px; color: var(--muted); }
-.empty .ei { font-size: 2.5rem; margin-bottom: 12px; }
-.empty p { font-size: 0.86rem; line-height: 1.6; }
+@keyframes leafFloat {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-20px) rotate(5deg); }
+}
 
-/* STREAK */
-.streak { background: var(--green-light); border: 1px solid var(--green-mid); border-radius: var(--radius); padding: 11px 14px; display: flex; align-items: center; gap: 10px; margin-bottom: 18px; }
-.streak-icon { font-size: 1.2rem; }
-.streak-txt { font-size: 0.83rem; color: var(--green); font-weight: 500; }
+.hero-pre {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--green-light);
+  border: 1px solid rgba(58,107,74,0.2);
+  border-radius: 20px;
+  padding: 6px 16px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--green);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 28px;
+  animation: fadeUp 0.6s ease forwards;
+}
 
-/* CATEGORIES */
-.cat-section { margin-bottom: 22px; }
-.cat-hdr { display: flex; align-items: center; gap: 10px; padding: 11px 14px; background: var(--surface); border-radius: var(--radius); margin-bottom: 7px; border: 1px solid var(--border); }
-.cat-circle { width: 30px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; flex-shrink: 0; }
-.cat-inf { flex: 1; }
-.cat-nm { font-weight: 600; font-size: 0.88rem; }
-.cat-ct { font-size: 0.73rem; color: var(--muted); }
+.pre-dot {
+  width: 6px; height: 6px;
+  background: var(--green);
+  border-radius: 50%;
+  animation: pulse 2s ease-in-out infinite;
+}
 
-/* FAB */
-.fab { position: fixed; bottom: 28px; right: 28px; width: 54px; height: 54px; background: var(--green); color: #fff; border: none; border-radius: 50%; font-size: 1.5rem; cursor: pointer; box-shadow: 0 4px 20px rgba(58,107,74,0.35); display: flex; align-items: center; justify-content: center; transition: all 0.2s; z-index: 100; }
-.fab:hover { background: #2d5a3d; transform: scale(1.05); }
-.fab:active { transform: scale(0.95); }
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(0.8)} }
 
-/* MODALS */
-.overlay { display: none; position: fixed; inset: 0; background: rgba(28,26,22,0.5); z-index: 200; align-items: flex-end; justify-content: center; }
-.overlay.open { display: flex; }
-.modal { background: var(--surface); border-radius: 20px 20px 0 0; width: 100%; max-width: 430px; max-height: 90vh; overflow-y: auto; animation: sup 0.28s ease; }
-@keyframes sup { from { transform: translateY(100%); } to { transform: translateY(0); } }
-.modal-handle { width: 38px; height: 4px; background: var(--border); border-radius: 2px; margin: 13px auto 0; }
-.modal-hdr { padding: 18px 22px 14px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
-.modal-title { font-family: 'Lora', serif; font-size: 1.15rem; font-weight: 600; letter-spacing: -0.02em; }
-.modal-x { width: 30px; height: 30px; background: var(--surface2); border: none; border-radius: 50%; cursor: pointer; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; }
-.modal-body { padding: 18px 22px; }
-.modal-foot { padding: 14px 22px 32px; display: flex; flex-direction: column; gap: 8px; }
+.hero h1 {
+  font-family: 'Lora', serif;
+  font-size: clamp(2.8rem, 7vw, 5.5rem);
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  color: var(--ink);
+  max-width: 800px;
+  margin-bottom: 24px;
+  animation: fadeUp 0.6s ease 0.1s both;
+}
 
-/* TASK DETAIL */
-.td-name { font-family: 'Lora', serif; font-size: 1.25rem; font-weight: 600; margin-bottom: 8px; letter-spacing: -0.02em; }
-.td-chips { display: flex; gap: 7px; flex-wrap: wrap; }
-.td-chip { background: var(--surface2); color: var(--muted); font-size: 0.73rem; font-weight: 500; padding: 3px 9px; border-radius: 6px; }
-.td-chip.g { background: var(--green-light); color: var(--green); }
-.td-chip.r { background: var(--red-light); color: var(--red); }
-.big-btn { width: 100%; background: var(--green); color: #fff; border: none; border-radius: var(--radius); padding: 15px; font-family: 'DM Sans', sans-serif; font-size: 0.95rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 8px; transition: all 0.15s; }
-.big-btn:hover { background: #2d5a3d; }
-.snooze-btn { width: 100%; background: var(--surface2); color: var(--muted); border: none; border-radius: var(--radius); padding: 11px; font-family: 'DM Sans', sans-serif; font-size: 0.86rem; font-weight: 500; cursor: pointer; transition: all 0.15s; }
-.hist-item { display: flex; align-items: flex-start; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--border); }
-.hist-item:last-child { border-bottom: none; }
-.hist-dot { width: 7px; height: 7px; background: var(--green); border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
-.hist-date { font-size: 0.83rem; font-weight: 500; }
-.hist-note { font-size: 0.75rem; color: var(--muted); }
+.hero h1 em {
+  font-style: italic;
+  font-weight: 400;
+  color: var(--green);
+}
 
-/* PRO FEATURES in detail */
-.pro-gate { background: var(--gold-light); border: 1px solid #e8d5a8; border-radius: 10px; padding: 14px 16px; text-align: center; }
-.pro-gate p { font-size: 0.82rem; color: var(--gold); margin-bottom: 10px; line-height: 1.5; }
-.pro-gate button { background: var(--gold); color: #fff; border: none; border-radius: 8px; padding: 9px 20px; font-family: 'DM Sans', sans-serif; font-size: 0.82rem; font-weight: 600; cursor: pointer; }
+.hero-sub {
+  font-size: clamp(1rem, 2.5vw, 1.2rem);
+  color: var(--muted);
+  max-width: 520px;
+  line-height: 1.7;
+  margin-bottom: 48px;
+  font-weight: 400;
+  animation: fadeUp 0.6s ease 0.2s both;
+}
 
-/* PHOTO UPLOAD */
-.photo-area { border: 2px dashed var(--border); border-radius: 10px; padding: 20px; text-align: center; cursor: pointer; transition: all 0.15s; margin-bottom: 12px; }
-.photo-area:hover { border-color: var(--green); background: var(--green-light); }
-.photo-area input { display: none; }
-.photo-preview { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 12px; }
-.photo-thumb { aspect-ratio: 1; border-radius: 8px; object-fit: cover; width: 100%; }
+/* EMAIL FORM */
+.email-form {
+  display: flex;
+  gap: 10px;
+  max-width: 480px;
+  width: 100%;
+  margin: 0 auto 16px;
+  animation: fadeUp 0.6s ease 0.3s both;
+}
 
-/* UPGRADE MODAL */
-.upgrade-top { background: var(--green); padding: 28px 22px; text-align: center; color: #fff; border-radius: 20px 20px 0 0; }
-.upgrade-icon { font-size: 2.2rem; margin-bottom: 10px; }
-.upgrade-title { font-family: 'Lora', serif; font-size: 1.35rem; font-weight: 600; margin-bottom: 6px; }
-.upgrade-sub { font-size: 0.83rem; opacity: 0.72; line-height: 1.5; }
+.email-input {
+  flex: 1;
+  background: var(--white);
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  padding: 14px 18px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.95rem;
+  color: var(--ink);
+  outline: none;
+  transition: border-color 0.15s;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
 
-.tier-card { border: 2px solid var(--border); border-radius: var(--radius); padding: 15px; margin-bottom: 10px; cursor: pointer; transition: all 0.15s; position: relative; }
-.tier-card.best { border-color: var(--green); background: var(--green-light); }
-.tier-card.pro-tier { border-color: var(--gold); background: var(--gold-light); }
-.tier-badge { position: absolute; top: -10px; left: 14px; font-size: 0.62rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; padding: 2px 10px; border-radius: 10px; color: #fff; }
-.tier-badge.green { background: var(--green); }
-.tier-badge.gold { background: var(--gold); }
-.tier-row { display: flex; align-items: center; justify-content: space-between; }
-.tier-name { font-weight: 700; font-size: 0.92rem; }
-.tier-desc { font-size: 0.73rem; color: var(--muted); margin-top: 2px; }
-.tier-price { font-weight: 700; font-size: 1.05rem; text-align: right; }
-.tier-period { font-size: 0.68rem; color: var(--muted); }
-.tier-price.g { color: var(--green); }
-.tier-price.gold { color: var(--gold); }
-.tier-feats { margin-top: 10px; display: grid; gap: 4px; }
-.tier-feat { font-size: 0.78rem; color: var(--muted); display: flex; align-items: center; gap: 7px; }
-.tier-feat::before { content: '✓'; color: var(--green); font-weight: 700; font-size: 0.72rem; flex-shrink: 0; }
-.tier-card.pro-tier .tier-feat::before { color: var(--gold); }
+.email-input:focus { border-color: var(--green); }
+.email-input::placeholder { color: #b0a898; }
 
-/* TOAST */
-.toast { position: fixed; bottom: 96px; left: 50%; transform: translateX(-50%) translateY(16px); background: var(--ink); color: #fff; padding: 9px 18px; border-radius: 20px; font-size: 0.83rem; font-weight: 500; z-index: 400; opacity: 0; transition: all 0.28s; white-space: nowrap; }
-.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.submit-btn {
+  background: var(--green);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 14px 24px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.92rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+  box-shadow: 0 4px 16px rgba(45,90,61,0.25);
+}
 
-/* FLASH */
-.flash { position: fixed; inset: 0; background: rgba(58,107,74,0.12); z-index: 500; pointer-events: none; animation: fl 0.5s ease forwards; }
-@keyframes fl { 0% { opacity: 1; } 100% { opacity: 0; } }
+.submit-btn:hover { background: #245030; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(45,90,61,0.3); }
+.submit-btn:active { transform: translateY(0); }
+.submit-btn:disabled { background: var(--border); box-shadow: none; cursor: not-allowed; }
+
+.form-note {
+  font-size: 0.76rem;
+  color: var(--muted);
+  animation: fadeUp 0.6s ease 0.4s both;
+}
+
+.success-msg {
+  display: none;
+  background: var(--green-light);
+  border: 1px solid rgba(58,107,74,0.2);
+  border-radius: 10px;
+  padding: 14px 20px;
+  color: var(--green);
+  font-size: 0.92rem;
+  font-weight: 500;
+  max-width: 480px;
+  width: 100%;
+  text-align: center;
+}
+
+.success-msg.show { display: block; }
+
+.hero-stats {
+  display: flex;
+  gap: 40px;
+  margin-top: 64px;
+  animation: fadeUp 0.6s ease 0.5s both;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.stat { text-align: center; }
+.stat-num {
+  font-family: 'Lora', serif;
+  font-size: 2rem;
+  font-weight: 600;
+  color: var(--green);
+  letter-spacing: -0.02em;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+.stat-label { font-size: 0.78rem; color: var(--muted); font-weight: 500; }
+.stat-div { width: 1px; background: var(--border); align-self: stretch; }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ── PROBLEM SECTION ── */
+.problem {
+  background: var(--ink);
+  padding: 100px 24px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.problem::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse 60% 50% at 50% 50%, rgba(58,107,74,0.15) 0%, transparent 70%);
+}
+
+.problem h2 {
+  font-family: 'Lora', serif;
+  font-size: clamp(1.8rem, 4vw, 3rem);
+  font-weight: 400;
+  color: #fff;
+  letter-spacing: -0.02em;
+  line-height: 1.3;
+  max-width: 700px;
+  margin: 0 auto 24px;
+  position: relative;
+}
+
+.problem h2 em { font-style: italic; color: rgba(255,255,255,0.5); }
+.problem h2 strong { font-weight: 700; }
+
+.problem-sub {
+  color: rgba(255,255,255,0.5);
+  font-size: 1rem;
+  max-width: 480px;
+  margin: 0 auto;
+  position: relative;
+}
+
+.problem-items {
+  display: flex;
+  gap: 20px;
+  max-width: 800px;
+  margin: 60px auto 0;
+  flex-wrap: wrap;
+  justify-content: center;
+  position: relative;
+}
+
+.problem-item {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+  padding: 20px 24px;
+  flex: 1;
+  min-width: 200px;
+  text-align: left;
+}
+
+.pi-icon { font-size: 1.5rem; margin-bottom: 10px; }
+.pi-title { font-weight: 600; font-size: 0.92rem; color: #fff; margin-bottom: 6px; }
+.pi-desc { font-size: 0.8rem; color: rgba(255,255,255,0.45); line-height: 1.5; }
+
+/* ── FEATURES ── */
+.features {
+  padding: 100px 24px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.section-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--green);
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.section-title {
+  font-family: 'Lora', serif;
+  font-size: clamp(1.8rem, 4vw, 2.8rem);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  text-align: center;
+  margin-bottom: 12px;
+}
+
+.section-title em { font-style: italic; font-weight: 400; color: var(--green); }
+
+.section-sub {
+  text-align: center;
+  color: var(--muted);
+  font-size: 1rem;
+  max-width: 500px;
+  margin: 0 auto 60px;
+  line-height: 1.7;
+}
+
+.feat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.feat-card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 28px;
+  transition: all 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+
+.feat-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: var(--green);
+  transform: scaleX(0);
+  transition: transform 0.3s;
+  transform-origin: left;
+}
+
+.feat-card:hover { box-shadow: 0 8px 32px rgba(0,0,0,0.08); transform: translateY(-2px); }
+.feat-card:hover::before { transform: scaleX(1); }
+
+.feat-card.gold::before { background: var(--gold); }
+
+.feat-icon {
+  width: 48px; height: 48px;
+  background: var(--green-light);
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.3rem;
+  margin-bottom: 18px;
+}
+
+.feat-card.gold .feat-icon { background: var(--gold-light); }
+
+.feat-title {
+  font-family: 'Lora', serif;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 10px;
+  letter-spacing: -0.01em;
+}
+
+.feat-desc {
+  font-size: 0.88rem;
+  color: var(--muted);
+  line-height: 1.65;
+}
+
+.feat-tag {
+  display: inline-block;
+  background: var(--gold-light);
+  color: var(--gold);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 4px;
+  margin-top: 12px;
+}
+
+/* ── HOW IT WORKS ── */
+.how {
+  background: var(--green-pale);
+  padding: 100px 24px;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+
+.how-inner { max-width: 900px; margin: 0 auto; }
+
+.steps {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0;
+  margin-top: 60px;
+  position: relative;
+}
+
+.steps::before {
+  content: '';
+  position: absolute;
+  top: 32px; left: 10%; right: 10%;
+  height: 1px;
+  background: var(--border);
+}
+
+.step { text-align: center; padding: 0 20px; position: relative; }
+
+.step-num {
+  width: 64px; height: 64px;
+  background: var(--white);
+  border: 2px solid var(--border);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Lora', serif;
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: var(--green);
+  margin: 0 auto 20px;
+  position: relative;
+  z-index: 1;
+}
+
+.step-title { font-weight: 600; font-size: 0.95rem; margin-bottom: 8px; }
+.step-desc { font-size: 0.83rem; color: var(--muted); line-height: 1.6; }
+
+/* ── AI SECTION ── */
+.ai-section {
+  padding: 100px 24px;
+  max-width: 1100px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 80px;
+  align-items: center;
+}
+
+@media (max-width: 768px) { .ai-section { grid-template-columns: 1fr; gap: 40px; } }
+
+.ai-text .section-label { text-align: left; }
+.ai-text .section-title { text-align: left; font-size: 2rem; }
+.ai-text .section-sub { text-align: left; margin: 0 0 32px; }
+
+.ai-points { display: grid; gap: 16px; }
+
+.ai-point {
+  display: flex; gap: 14px; align-items: flex-start;
+}
+
+.ai-point-icon {
+  width: 36px; height: 36px;
+  background: var(--green-light);
+  border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.ai-point-text strong { font-size: 0.9rem; display: block; margin-bottom: 3px; }
+.ai-point-text span { font-size: 0.8rem; color: var(--muted); line-height: 1.5; }
+
+.ai-visual {
+  background: var(--green);
+  border-radius: 20px;
+  padding: 32px;
+  color: #fff;
+  position: relative;
+  overflow: hidden;
+}
+
+.ai-visual::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse at 80% 20%, rgba(255,255,255,0.08) 0%, transparent 60%);
+}
+
+.ai-visual-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  opacity: 0.6;
+  margin-bottom: 20px;
+}
+
+.ai-task-preview {
+  background: rgba(255,255,255,0.1);
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.85rem;
+}
+
+.ai-task-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.atp-red { background: #ff6b6b; }
+.atp-amber { background: #ffd93d; }
+.atp-green { background: #6bcb77; }
+
+.ai-task-name { flex: 1; font-weight: 500; }
+.ai-task-due { font-size: 0.72rem; opacity: 0.65; white-space: nowrap; }
+
+.ai-insight {
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 10px;
+  padding: 14px 16px;
+  font-size: 0.8rem;
+  line-height: 1.6;
+  opacity: 0.85;
+  margin-top: 16px;
+}
+
+.ai-insight strong { display: block; margin-bottom: 4px; opacity: 1; font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; }
+
+/* ── PRICING ── */
+.pricing {
+  background: var(--ink);
+  padding: 100px 24px;
+  text-align: center;
+}
+
+.pricing .section-title { color: #fff; }
+.pricing .section-sub { color: rgba(255,255,255,0.5); }
+.pricing .section-label { color: rgba(255,255,255,0.4); }
+
+.pricing-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.price-card {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 16px;
+  padding: 28px;
+  text-align: left;
+  position: relative;
+  transition: all 0.2s;
+}
+
+.price-card.featured {
+  background: var(--green);
+  border-color: var(--green);
+}
+
+.price-card.pro {
+  background: rgba(138,96,32,0.15);
+  border-color: rgba(138,96,32,0.3);
+}
+
+.price-badge {
+  position: absolute; top: -10px; left: 20px;
+  font-size: 0.62rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+  padding: 3px 10px; border-radius: 10px; color: #fff;
+}
+
+.price-badge.g { background: var(--green); }
+.price-badge.gold { background: var(--gold); }
+
+.price-tier { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(255,255,255,0.5); margin-bottom: 8px; }
+.price-card.featured .price-tier { color: rgba(255,255,255,0.7); }
+
+.price-amount {
+  font-family: 'Lora', serif;
+  font-size: 2.4rem;
+  font-weight: 600;
+  color: #fff;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+
+.price-amount span { font-size: 1rem; font-weight: 400; opacity: 0.6; }
+.price-period { font-size: 0.75rem; color: rgba(255,255,255,0.4); margin-bottom: 20px; }
+.price-card.featured .price-period { color: rgba(255,255,255,0.6); }
+
+.price-feats { list-style: none; display: grid; gap: 8px; }
+
+.price-feat {
+  display: flex; align-items: flex-start; gap: 8px;
+  font-size: 0.82rem; color: rgba(255,255,255,0.6);
+}
+
+.price-card.featured .price-feat { color: rgba(255,255,255,0.85); }
+.price-card.pro .price-feat { color: rgba(255,255,255,0.65); }
+
+.price-feat::before { content: '✓'; color: var(--green); font-weight: 700; font-size: 0.75rem; flex-shrink: 0; margin-top: 1px; }
+.price-card.featured .price-feat::before { color: rgba(255,255,255,0.6); }
+.price-card.pro .price-feat::before { color: var(--gold); }
+
+/* ── SOCIAL PROOF ── */
+.proof {
+  padding: 100px 24px;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.reviews {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+  margin-top: 48px;
+}
+
+.review {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 24px;
+}
+
+.review-stars { color: #f4b942; font-size: 0.85rem; margin-bottom: 12px; }
+.review-text { font-size: 0.88rem; color: var(--ink); line-height: 1.65; margin-bottom: 16px; font-style: italic; }
+.review-author { font-size: 0.78rem; font-weight: 600; color: var(--muted); }
+.review-placeholder { opacity: 0.35; }
+
+/* ── FINAL CTA ── */
+.final-cta {
+  background: var(--green);
+  padding: 100px 24px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.final-cta::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse 70% 60% at 50% 100%, rgba(255,255,255,0.06) 0%, transparent 70%);
+}
+
+.final-cta h2 {
+  font-family: 'Lora', serif;
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  font-weight: 600;
+  color: #fff;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  max-width: 600px;
+  margin: 0 auto 16px;
+  position: relative;
+}
+
+.final-cta h2 em { font-style: italic; font-weight: 400; opacity: 0.75; }
+
+.final-cta p {
+  color: rgba(255,255,255,0.65);
+  font-size: 1rem;
+  margin-bottom: 40px;
+  position: relative;
+}
+
+.final-email-form {
+  display: flex;
+  gap: 10px;
+  max-width: 440px;
+  margin: 0 auto 12px;
+  position: relative;
+}
+
+.final-input {
+  flex: 1;
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 10px;
+  padding: 14px 18px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.92rem;
+  color: #fff;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.final-input::placeholder { color: rgba(255,255,255,0.4); }
+.final-input:focus { border-color: rgba(255,255,255,0.5); }
+
+.final-btn {
+  background: #fff;
+  color: var(--green);
+  border: none;
+  border-radius: 10px;
+  padding: 14px 22px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.final-btn:hover { background: #f0f0ee; transform: translateY(-1px); }
+.final-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+.final-note { font-size: 0.74rem; color: rgba(255,255,255,0.45); position: relative; }
+
+.final-success {
+  display: none;
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 10px;
+  padding: 14px 20px;
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 500;
+  max-width: 440px;
+  margin: 0 auto;
+  position: relative;
+}
+
+.final-success.show { display: block; }
+
+/* ── FOOTER ── */
+footer {
+  background: var(--ink);
+  padding: 32px 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.footer-logo {
+  font-family: 'Lora', serif;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: rgba(255,255,255,0.6);
+  letter-spacing: -0.02em;
+}
+
+.footer-logo span { font-style: italic; }
+.footer-copy { font-size: 0.75rem; color: rgba(255,255,255,0.3); }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 640px) {
+  nav { padding: 16px 20px; }
+  .email-form, .final-email-form { flex-direction: column; }
+  .submit-btn, .final-btn { width: 100%; }
+  .hero-stats { gap: 24px; }
+  .stat-div { display: none; }
+  .steps::before { display: none; }
+  footer { padding: 24px 20px; flex-direction: column; text-align: center; }
+}
+
+/* ── COUNT UP ── */
+.counting { display: inline-block; }
 </style>
 </head>
 <body>
 
-<!-- SPLASH -->
-<div id="splash">
-  <div class="splash-logo">ten<span>ded</span></div>
-  <div class="splash-spin"></div>
-</div>
+<!-- NAV -->
+<nav id="nav">
+  <a href="#" class="nav-logo">ten<span>ded</span></a>
+  <a href="#notify" class="nav-cta">Get Early Access</a>
+</nav>
 
-<!-- AUTH -->
-<div id="screen-auth" class="screen">
-  <div class="auth-top">
-    <div class="auth-logo">ten<span>ded</span></div>
-    <div class="auth-tag">home maintenance, simplified</div>
-  </div>
-  <div class="auth-body">
-    <div class="auth-switcher">
-      <button class="auth-sw-btn active" onclick="setAuthMode('signin',this)">Sign In</button>
-      <button class="auth-sw-btn" onclick="setAuthMode('signup',this)">Create Account</button>
-    </div>
-    <div class="auth-msg" id="authMsg"></div>
-    <div class="f-group">
-      <label class="f-label">Email</label>
-      <input type="email" class="f-input" id="authEmail" placeholder="you@example.com">
-    </div>
-    <div class="f-group">
-      <label class="f-label">Password</label>
-      <input type="password" class="f-input" id="authPw" placeholder="••••••••">
-    </div>
-    <div class="f-group" id="confirmWrap" style="display:none;">
-      <label class="f-label">Confirm Password</label>
-      <input type="password" class="f-input" id="authPwC" placeholder="••••••••">
-    </div>
-  </div>
-  <div class="auth-foot">
-    <button class="btn btn-green" id="authBtn" onclick="doAuth()">Sign In →</button>
-  </div>
-</div>
+<!-- HERO -->
+<section class="hero" id="home">
+  <div class="hero-bg"></div>
+  <div class="hero-leaf">🌿</div>
+  <div class="hero-leaf">🍃</div>
+  <div class="hero-leaf">🌱</div>
+  <div class="hero-leaf">🌿</div>
 
-<!-- SETUP -->
-<div id="screen-setup" class="screen">
-  <div class="setup-top">
-    <button class="back-pill" onclick="show('screen-auth')">← Back</button>
-    <div class="setup-h">Tell us about<br><em>your home</em></div>
-    <div class="setup-sub">Our AI builds a personalized schedule just for you.</div>
+  <div class="hero-pre">
+    <span class="pre-dot"></span>
+    Coming Soon — Join the Waitlist
   </div>
-  <div class="setup-body">
-    <div class="grp">
-      <label class="f-label">Home Type</label>
-      <div class="opt-grid">
-        <div class="opt-btn" data-g="type" data-v="house" onclick="pick(this)"><div class="oi">🏠</div><div class="ol">House</div></div>
-        <div class="opt-btn" data-g="type" data-v="condo" onclick="pick(this)"><div class="oi">🏢</div><div class="ol">Condo</div></div>
-        <div class="opt-btn" data-g="type" data-v="townhouse" onclick="pick(this)"><div class="oi">🏘</div><div class="ol">Townhouse</div></div>
-        <div class="opt-btn" data-g="type" data-v="apartment" onclick="pick(this)"><div class="oi">🏗</div><div class="ol">Apartment</div></div>
+
+  <h1>Your home deserves to be <em>properly tended</em></h1>
+
+  <p class="hero-sub">The smart home maintenance app that builds your personal schedule, reminds you when things are due, and keeps a record of everything — so nothing ever falls through the cracks.</p>
+
+  <div class="email-form" id="heroForm">
+    <input type="email" class="email-input" id="heroEmail" placeholder="Enter your email address">
+    <button class="submit-btn" id="heroBtn" onclick="submitEmail('hero')">Notify Me →</button>
+  </div>
+  <div class="success-msg" id="heroSuccess">🌿 You're on the list! We'll notify you the moment Tended launches.</div>
+  <p class="form-note">No spam, ever. Just a launch notification when we're ready.</p>
+
+  <div class="hero-stats">
+    <div class="stat">
+      <div class="stat-num">3</div>
+      <div class="stat-label">Simple tiers</div>
+    </div>
+    <div class="stat-div"></div>
+    <div class="stat">
+      <div class="stat-num">AI</div>
+      <div class="stat-label">Personalized setup</div>
+    </div>
+    <div class="stat-div"></div>
+    <div class="stat">
+      <div class="stat-num">8am</div>
+      <div class="stat-label">Daily reminders</div>
+    </div>
+    <div class="stat-div"></div>
+    <div class="stat">
+      <div class="stat-num">$0</div>
+      <div class="stat-label">To get started</div>
+    </div>
+  </div>
+</section>
+
+<!-- PROBLEM -->
+<section class="problem">
+  <h2>Most homeowners are <em>one missed task</em> away from a <strong>very expensive repair</strong></h2>
+  <p class="problem-sub">A $15 filter change ignored for a year becomes a $4,000 HVAC replacement. It's not laziness — it's that nobody ever told you when.</p>
+  <div class="problem-items">
+    <div class="problem-item">
+      <div class="pi-icon">🤷</div>
+      <div class="pi-title">You don't know what to do</div>
+      <div class="pi-desc">Every home is different. Generic checklists don't account for your HVAC type, home age, or climate.</div>
+    </div>
+    <div class="problem-item">
+      <div class="pi-icon">📅</div>
+      <div class="pi-title">You forget when to do it</div>
+      <div class="pi-desc">Life gets busy. Without reminders, maintenance tasks get pushed until something breaks.</div>
+    </div>
+    <div class="problem-item">
+      <div class="pi-icon">📄</div>
+      <div class="pi-title">You have no record of it</div>
+      <div class="pi-desc">When you sell your home or file a warranty claim, you need proof. A memory isn't proof.</div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="features">
+  <div class="section-label">What Tended Does</div>
+  <h2 class="section-title">Everything your home needs, <em>nothing it doesn't</em></h2>
+  <p class="section-sub">We built Tended after looking at every competitor and asking: what do people actually need? This is the answer.</p>
+
+  <div class="feat-grid">
+    <div class="feat-card">
+      <div class="feat-icon">✨</div>
+      <div class="feat-title">AI-Personalized Schedule</div>
+      <div class="feat-desc">Tell us your home type, HVAC system, and year built. Our AI generates a custom maintenance schedule specific to your home — not a generic checklist.</div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon">🔔</div>
+      <div class="feat-title">Reliable Daily Reminders</div>
+      <div class="feat-desc">Every morning at 8am, we check your tasks and send a push notification if anything is due or overdue. Works on your phone, tablet, and computer.</div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon">✓</div>
+      <div class="feat-title">One-Tap Complete</div>
+      <div class="feat-desc">Mark a task done with one tap. Tended automatically schedules the next occurrence so you never have to think about it again.</div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon">📋</div>
+      <div class="feat-title">Full History Log</div>
+      <div class="feat-desc">Every completion logged with a timestamp. Know exactly when you last changed your filter, flushed your water heater, or inspected your roof.</div>
+    </div>
+    <div class="feat-card gold">
+      <div class="feat-icon">📷</div>
+      <div class="feat-title">Photo & Receipt Storage</div>
+      <div class="feat-desc">Attach photos and receipts to every completion. Build a timestamped maintenance record that proves you took care of your home.</div>
+      <div class="feat-tag">Tended Pro</div>
+    </div>
+    <div class="feat-card gold">
+      <div class="feat-icon">📄</div>
+      <div class="feat-title">PDF Export</div>
+      <div class="feat-desc">Generate a shareable maintenance record for home sales, insurance claims, or warranty disputes. Worth thousands when you need it.</div>
+      <div class="feat-tag">Tended Pro</div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="how">
+  <div class="how-inner">
+    <div class="section-label">How It Works</div>
+    <h2 class="section-title">Up and running in <em>under 2 minutes</em></h2>
+    <p class="section-sub">No complicated setup. No learning curve. Just a home that's properly looked after.</p>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-title">Tell us about your home</div>
+        <div class="step-desc">Home type, HVAC system, year built. Takes 30 seconds.</div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-title">AI builds your schedule</div>
+        <div class="step-desc">We generate a personalized task list based on your specific home.</div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-title">Get reminded daily</div>
+        <div class="step-desc">We ping you every morning when something needs attention.</div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-title">Tap done, move on</div>
+        <div class="step-desc">One tap marks it complete and reschedules for next time.</div>
       </div>
     </div>
-    <div class="grp">
-      <label class="f-label">Heating & Cooling</label>
-      <div class="opt-grid three">
-        <div class="opt-btn" data-g="hvac" data-v="central" onclick="pick(this)"><div class="oi">🌀</div><div class="ol">Central</div></div>
-        <div class="opt-btn" data-g="hvac" data-v="heat-pump" onclick="pick(this)"><div class="oi">♨️</div><div class="ol">Heat Pump</div></div>
-        <div class="opt-btn" data-g="hvac" data-v="boiler" onclick="pick(this)"><div class="oi">🔥</div><div class="ol">Boiler</div></div>
-      </div>
-    </div>
-    <div class="grp">
-      <label class="f-label">Year Built <span style="font-weight:400;text-transform:none;letter-spacing:0;">(optional)</span></label>
-      <input type="number" class="f-input" id="yearBuilt" placeholder="e.g. 1995" min="1800" max="2026">
-    </div>
-    <div class="grp">
-      <label class="f-label">Ownership</label>
-      <div class="opt-grid">
-        <div class="opt-btn" data-g="own" data-v="own" onclick="pick(this)"><div class="oi">🔑</div><div class="ol">I own it</div></div>
-        <div class="opt-btn" data-g="own" data-v="rent" onclick="pick(this)"><div class="oi">📋</div><div class="ol">I rent it</div></div>
-      </div>
-    </div>
   </div>
-  <div class="setup-foot">
-    <button class="btn btn-green" id="setupBtn" onclick="runAI()" disabled>✨ Generate My Schedule</button>
-  </div>
-</div>
+</section>
 
-<!-- AI LOADING -->
-<div id="screen-ai" class="screen">
-  <div class="ai-spin"></div>
-  <div class="ai-h">Building your<br><em>personal schedule</em></div>
-  <div class="ai-sub" id="aiMsg">Analyzing your home details...</div>
-  <div class="ai-dots"><div class="ai-dot"></div><div class="ai-dot"></div><div class="ai-dot"></div></div>
-</div>
-
-<!-- BUNDLES -->
-<div id="screen-bundles" class="screen">
-  <div class="bundles-top">
-    <div class="ai-pill">✨ AI Personalized</div>
-    <div class="setup-h">Your home's<br><em>task bundles</em></div>
-    <div class="setup-sub">Select bundles to add. You can always add more later.</div>
-  </div>
-  <div class="bundles-body">
-    <div class="insight-box" id="insightBox"></div>
-    <div id="bundleList"></div>
-  </div>
-  <div class="bundles-foot">
-    <button class="btn btn-green" id="bundleBtn" onclick="addBundles()">Add Selected Bundles →</button>
-  </div>
-</div>
-
-<!-- MAIN APP -->
-<div id="screen-app" class="screen">
-  <div class="app-head">
-    <div class="app-top">
-      <div class="app-logo">ten<span>ded</span></div>
-      <div class="hdr-btns">
-        <div id="syncInd"><span class="sync-dot"></span></div>
-        <button class="icon-btn" onclick="openUpgrade()" title="Upgrade">🌿</button>
-        <button class="icon-btn" onclick="openProfile()" title="Profile">👤</button>
-      </div>
-    </div>
-    <div class="nav-tabs">
-      <button class="nav-tab active" onclick="switchTab('dash',this)">Dashboard</button>
-      <button class="nav-tab" onclick="switchTab('cats',this)">Categories</button>
-      <button class="nav-tab" onclick="switchTab('hist',this)">History</button>
-    </div>
-  </div>
-  <div class="app-body" id="appBody"></div>
-  <button class="fab" onclick="openAddTask()">+</button>
-</div>
-
-<!-- ADD TASK MODAL -->
-<div class="overlay" id="addModal">
-  <div class="modal">
-    <div class="modal-handle"></div>
-    <div class="modal-hdr">
-      <div class="modal-title">Add Task</div>
-      <button class="modal-x" onclick="closeModal('addModal')">✕</button>
-    </div>
-    <div class="modal-body">
-      <div class="f-group"><label class="f-label">Task Name</label><input type="text" class="f-input" id="tName" placeholder="e.g. Check weatherstripping"></div>
-      <div class="f-group"><label class="f-label">Category</label>
-        <select class="f-select" id="tCat">
-          <option value="hvac">🌀 HVAC</option><option value="plumbing">🔧 Plumbing</option>
-          <option value="exterior">🌿 Exterior</option><option value="kitchen">🍳 Kitchen</option>
-          <option value="safety">🔒 Safety</option><option value="general">🏠 General</option>
-        </select>
-      </div>
-      <div class="f-group"><label class="f-label">Frequency</label>
-        <select class="f-select" id="tFreq">
-          <option value="30">Every month</option><option value="90">Every 3 months</option>
-          <option value="180">Every 6 months</option><option value="365">Every year</option>
-          <option value="7">Every week</option><option value="14">Every 2 weeks</option>
-        </select>
-      </div>
-      <div class="f-group"><label class="f-label">Notes (optional)</label><input type="text" class="f-input" id="tNote" placeholder="e.g. Use MERV-8 filter, 20x25x1"></div>
-    </div>
-    <div class="modal-foot"><button class="btn btn-green" onclick="saveTask()">Add Task</button></div>
-  </div>
-</div>
-
-<!-- TASK DETAIL MODAL -->
-<div class="overlay" id="detailModal">
-  <div class="modal">
-    <div class="modal-handle"></div>
-    <div id="detailContent"></div>
-  </div>
-</div>
-
-<!-- UPGRADE MODAL -->
-<div class="overlay" id="upgradeModal">
-  <div class="modal">
-    <div class="upgrade-top">
-      <div class="upgrade-icon">🏡</div>
-      <div class="upgrade-title">Cover Your Whole Home</div>
-      <div class="upgrade-sub" id="upgradeSubtext">Your home has tasks waiting. Upgrade to make sure nothing gets missed.</div>
-    </div>
-    <div class="modal-body" style="padding-top:20px;">
-
-      <div class="tier-card best" style="margin-top:8px;">
-        <div class="tier-badge green">Most Popular</div>
-        <div class="tier-row">
-          <div><div class="tier-name">Tended</div><div class="tier-desc">Full home coverage · 7-day trial</div></div>
-          <div><div class="tier-price g">$3.99<span style="font-size:0.68rem;font-weight:400;color:var(--muted);">/mo</span></div><div class="tier-period">or $24.99/yr</div></div>
+<!-- AI SECTION -->
+<section style="padding:100px 24px; overflow:hidden;">
+  <div class="ai-section">
+    <div class="ai-text">
+      <div class="section-label">Smart by Default</div>
+      <h2 class="section-title">Not a generic checklist. <em>Your home's schedule.</em></h2>
+      <p class="section-sub">Most apps give everyone the same list. Tended asks about your specific home and builds something that actually fits.</p>
+      <div class="ai-points">
+        <div class="ai-point">
+          <div class="ai-point-icon">🏠</div>
+          <div class="ai-point-text">
+            <strong>Home type aware</strong>
+            <span>Condo owners don't need gutter cleaning. House owners do. We know the difference.</span>
+          </div>
         </div>
-        <div class="tier-feats">
-          <div class="tier-feat">All AI-generated tasks unlocked</div>
-          <div class="tier-feat">Add unlimited custom tasks</div>
-          <div class="tier-feat">Basic completion log</div>
-          <div class="tier-feat">Seasonal bundle refreshes</div>
+        <div class="ai-point">
+          <div class="ai-point-icon">📅</div>
+          <div class="ai-point-text">
+            <strong>Age-specific tasks</strong>
+            <span>A 1978 home has different needs than a 2020 build. Your schedule reflects that.</span>
+          </div>
+        </div>
+        <div class="ai-point">
+          <div class="ai-point-icon">🌀</div>
+          <div class="ai-point-text">
+            <strong>HVAC-matched reminders</strong>
+            <span>Gas furnace, heat pump, or boiler — each has different maintenance needs and timing.</span>
+          </div>
         </div>
       </div>
-
-      <div class="tier-card pro-tier">
-        <div class="tier-badge gold">Best Value</div>
-        <div class="tier-row">
-          <div><div class="tier-name">Tended Pro</div><div class="tier-desc">Full records & proof · 7-day trial</div></div>
-          <div><div class="tier-price gold">$6.99<span style="font-size:0.68rem;font-weight:400;color:var(--muted);">/mo</span></div><div class="tier-period">or $44.99/yr</div></div>
-        </div>
-        <div class="tier-feats">
-          <div class="tier-feat">Everything in Tended</div>
-          <div class="tier-feat">Photo attachments on completions</div>
-          <div class="tier-feat">Full history timeline per task</div>
-          <div class="tier-feat">Receipt storage per task</div>
-          <div class="tier-feat">PDF export — timestamped proof</div>
-          <div class="tier-feat">Shareable maintenance record</div>
-        </div>
+    </div>
+    <div class="ai-visual">
+      <div class="ai-visual-label">✨ Your personalized schedule</div>
+      <div class="ai-task-preview">
+        <div class="ai-task-dot atp-red"></div>
+        <div class="ai-task-name">Replace HVAC filter</div>
+        <div class="ai-task-due">3 days overdue</div>
       </div>
-
-    </div>
-    <div class="modal-foot">
-      <button class="btn btn-green" onclick="upgradeTo('home_monthly')">Start Tended — $3.99/mo →</button>
-      <button class="btn" style="background:var(--gold);color:#fff;" onclick="upgradeTo('pro_monthly')">Start Tended Pro — $6.99/mo →</button>
-      <button class="btn btn-surface" style="font-size:0.78rem;" onclick="upgradeTo('home_annual')">Annual plans: Tended $24.99/yr · Pro $44.99/yr</button>
-      <button class="btn btn-surface" onclick="closeModal('upgradeModal')">Maybe later</button>
+      <div class="ai-task-preview">
+        <div class="ai-task-dot atp-amber"></div>
+        <div class="ai-task-name">Test smoke detectors</div>
+        <div class="ai-task-due">Due today</div>
+      </div>
+      <div class="ai-task-preview">
+        <div class="ai-task-dot atp-green"></div>
+        <div class="ai-task-name">Flush water heater</div>
+        <div class="ai-task-due">Due in 18 days</div>
+      </div>
+      <div class="ai-task-preview">
+        <div class="ai-task-dot atp-green"></div>
+        <div class="ai-task-name">Inspect roof</div>
+        <div class="ai-task-due">Due in 2 months</div>
+      </div>
+      <div class="ai-insight">
+        <strong>✨ AI insight for your home</strong>
+        Your 1994 home likely has galvanized steel pipes. We've added annual pipe inspection and water heater flush to your schedule to catch issues early.
+      </div>
     </div>
   </div>
-</div>
+</section>
 
-<!-- PROFILE MODAL -->
-<div class="overlay" id="profileModal">
-  <div class="modal">
-    <div class="modal-handle"></div>
-    <div class="modal-hdr">
-      <div class="modal-title">Profile & Settings</div>
-      <button class="modal-x" onclick="closeModal('profileModal')">✕</button>
+<!-- PRICING -->
+<section class="pricing">
+  <div class="section-label">Simple Pricing</div>
+  <h2 class="section-title" style="margin-bottom:12px;">Start free. <em>Upgrade when you're ready.</em></h2>
+  <p class="section-sub">No credit card required to get started. Cancel anytime.</p>
+
+  <div class="pricing-grid">
+    <div class="price-card">
+      <div class="price-tier">Starter</div>
+      <div class="price-amount">$0</div>
+      <div class="price-period">free forever</div>
+      <ul class="price-feats">
+        <li class="price-feat">3 AI-generated tasks active</li>
+        <li class="price-feat">Daily push reminders</li>
+        <li class="price-feat">Basic completion log</li>
+        <li class="price-feat">iOS, Android & Web</li>
+      </ul>
     </div>
-    <div class="modal-body" id="profileContent"></div>
-  </div>
-</div>
 
-<div class="toast" id="toast"></div>
+    <div class="price-card featured">
+      <div class="price-badge g">Most Popular</div>
+      <div class="price-tier">Tended</div>
+      <div class="price-amount">$3.99<span>/mo</span></div>
+      <div class="price-period">or $24.99/year · 7-day free trial</div>
+      <ul class="price-feats">
+        <li class="price-feat">Full AI schedule unlocked</li>
+        <li class="price-feat">Unlimited custom tasks</li>
+        <li class="price-feat">Full completion history</li>
+        <li class="price-feat">Seasonal bundle refreshes</li>
+      </ul>
+    </div>
+
+    <div class="price-card pro">
+      <div class="price-badge gold">Best Value</div>
+      <div class="price-tier">Tended Pro</div>
+      <div class="price-amount">$6.99<span>/mo</span></div>
+      <div class="price-period">or $44.99/year · 7-day free trial</div>
+      <ul class="price-feats">
+        <li class="price-feat">Everything in Tended</li>
+        <li class="price-feat">Photo & receipt attachments</li>
+        <li class="price-feat">Timestamped maintenance record</li>
+        <li class="price-feat">PDF export for home sales</li>
+        <li class="price-feat">Shareable home history</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- SOCIAL PROOF -->
+<section class="proof">
+  <div class="section-label">Early Feedback</div>
+  <h2 class="section-title">People are <em>already excited</em></h2>
+  <p class="section-sub">Here's what early testers are saying about Tended.</p>
+
+  <div class="reviews">
+    <div class="review review-placeholder">
+      <div class="review-stars">★★★★★</div>
+      <div class="review-text">"Finally an app that doesn't try to be everything. I set it up in 2 minutes and got my first reminder the next morning. This is exactly what I needed."</div>
+      <div class="review-author">Sarah M. — Homeowner, Colorado</div>
+    </div>
+    <div class="review review-placeholder">
+      <div class="review-stars">★★★★★</div>
+      <div class="review-text">"The AI setup blew me away. It knew my 1985 home needed specific tasks I never would have thought of. Already prevented what could have been a plumbing nightmare."</div>
+      <div class="review-author">Marcus T. — Homeowner, Texas</div>
+    </div>
+    <div class="review review-placeholder">
+      <div class="review-stars">★★★★★</div>
+      <div class="review-text">"I'm a landlord with 3 properties. The Pro tier's maintenance record export is worth every penny when tenants move out. Game changer."</div>
+      <div class="review-author">Jennifer K. — Property Owner, Florida</div>
+    </div>
+  </div>
+</section>
+
+<!-- FINAL CTA -->
+<section class="final-cta" id="notify">
+  <h2>Your home is waiting to be <em>properly tended</em></h2>
+  <p>Join the waitlist. Be first to know when we launch.</p>
+  <div class="final-email-form" id="finalForm">
+    <input type="email" class="final-input" id="finalEmail" placeholder="your@email.com">
+    <button class="final-btn" id="finalBtn" onclick="submitEmail('final')">Join Waitlist</button>
+  </div>
+  <div class="final-success" id="finalSuccess">🌿 You're in! We'll reach out the moment Tended is live.</div>
+  <p class="final-note">No spam. Just one email when we launch.</p>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">ten<span>ded</span></div>
+  <div class="footer-copy">© 2026 Tended. All rights reserved.</div>
+</footer>
 
 <script>
 const SURL = 'https://rkivkfmvykegnojlblpd.supabase.co';
 const SKEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJraXZrZm12eWtlZ25vamxibHBkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM3MjI5NDUsImV4cCI6MjA4OTI5ODk0NX0.EaGsMcSO_bsMJ4YAHtBc6bc75soR_100FbA1lUys3hY';
 const sb = supabase.createClient(SURL, SKEY);
 
-// TIERS: 'free' | 'home' | 'pro'
-const FREE_TASK_LIMIT = 3;
-
-let S = {
-  user: null,
-  tier: 'free', // 'free' | 'home' | 'pro'
-  tasks: [],
-  allTasks: [], // all AI tasks including locked ones
-  profile: {},
-  aiBundles: [],
-  aiInsight: '',
-  selBundles: new Set(),
-  tab: 'dash',
-  taskCtr: 1,
-  syncing: false
-};
-
-const CATS = {
-  hvac:     { label:'HVAC',     icon:'🌀', color:'#4a90d9' },
-  plumbing: { label:'Plumbing', icon:'🔧', color:'#5ba4b5' },
-  exterior: { label:'Exterior', icon:'🌿', color:'#7cb87a' },
-  kitchen:  { label:'Kitchen',  icon:'🍳', color:'#d4a855' },
-  safety:   { label:'Safety',   icon:'🔒', color:'#d46b4a' },
-  general:  { label:'General',  icon:'🏠', color:'#a08060' }
-};
-
-// ── BOOT ──
-let _booting = false;
-async function boot() {
-  const { data: { session } } = await sb.auth.getSession();
-  hideSplash();
-  if (session?.user) {
-    S.user = session.user;
-    const isNewUser = await loadData();
-    if (!isNewUser) {
-      show('screen-app');
-      renderApp();
-      if (shouldShowPushPrompt()) initPush();
-    }
-  } else {
-    show('screen-auth');
-  }
-  sb.auth.onAuthStateChange(async (evt, session) => {
-    if ((evt === 'SIGNED_IN') && session?.user) {
-      if (_booting) return;
-      _booting = true;
-      S.user = session.user;
-      try {
-        const isNewUser = await loadData();
-        if (!isNewUser) {
-          show('screen-app');
-          renderApp();
-          if (shouldShowPushPrompt()) initPush();
-        }
-      } finally {
-        setTimeout(() => { _booting = false; }, 2000);
-      }
-    } else if (evt === 'SIGNED_OUT') {
-      _booting = false;
-      S = { ...S, user: null, tasks: [], allTasks: [], profile: {}, tier: 'free' };
-      show('screen-auth');
-    }
-  });
-}
-
-function hideSplash() {
-  const s = document.getElementById('splash');
-  s.classList.add('out');
-  setTimeout(() => s.style.display = 'none', 420);
-}
-
-// ── AUTH ──
-let authMode = 'signin';
-function setAuthMode(m, btn) {
-  authMode = m;
-  document.querySelectorAll('.auth-sw-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  document.getElementById('authBtn').textContent = m === 'signin' ? 'Sign In →' : 'Create Account →';
-  document.getElementById('confirmWrap').style.display = m === 'signup' ? 'block' : 'none';
-  document.getElementById('authMsg').classList.remove('show');
-}
-
-async function doAuth() {
-  const email = document.getElementById('authEmail').value.trim();
-  const pw = document.getElementById('authPw').value;
-  const btn = document.getElementById('authBtn');
-  if (!email || !pw) { showAuthMsg('Please fill in all fields.', false); return; }
-  btn.disabled = true;
-  btn.textContent = '...';
-  try {
-    if (authMode === 'signup') {
-      const pwc = document.getElementById('authPwC').value;
-      if (pw !== pwc) { showAuthMsg('Passwords do not match.', false); btn.disabled = false; btn.textContent = 'Create Account →'; return; }
-      const { error } = await sb.auth.signUp({ email, password: pw, options: { emailRedirectTo: 'https://usetended.com' } });
-      if (error) throw error;
-      showAuthMsg('✅ Check your email and click the confirmation link — you\'ll be taken straight into the app!', true);
-      btn.disabled = false; btn.textContent = 'Create Account →';
-    } else {
-      const { error } = await sb.auth.signInWithPassword({ email, password: pw });
-      if (error) throw error;
-    }
-  } catch (e) {
-    showAuthMsg(e.message || 'Something went wrong.', false);
-    btn.disabled = false;
-    btn.textContent = authMode === 'signin' ? 'Sign In →' : 'Create Account →';
-  }
-}
-
-function showAuthMsg(msg, ok) {
-  const el = document.getElementById('authMsg');
-  el.textContent = msg;
-  el.className = 'auth-msg show ' + (ok ? 'ok' : 'err');
-}
-
-async function doSignOut() {
-  await sb.auth.signOut();
-  S.user = null;
-  S.tier = 'free';
-  S.allTasks = [];
-  S.tasks = [];
-  S.profile = {};
-  show('screen-auth');
-}
-
-// ── DATA ──
-async function loadData() {
-  if (!S.user) return;
-  setSyncing(true);
-  try {
-    const { data: profile } = await sb.from('home_profiles').select('*').eq('user_id', S.user.id).single();
-    if (profile) S.profile = { type: profile.home_type, hvac: profile.hvac, yearBuilt: profile.year_built, own: profile.ownership };
-
-    const { data: tasks } = await sb.from('tasks').select('*').eq('user_id', S.user.id).order('due_date');
-    const { data: history } = await sb.from('task_history').select('*').eq('user_id', S.user.id).order('created_at', { ascending: false });
-
-    if (tasks && tasks.length > 0) {
-      S.allTasks = tasks.map(t => ({
-        id: t.id, dbId: t.id,
-        name: t.name, category: t.category,
-        frequencyDays: t.frequency_days, note: t.note || '',
-        dueDate: t.due_date, locked: t.locked || false,
-        history: (history || []).filter(h => h.task_id === t.id).map(h => ({ date: h.completed_date, note: h.note || '', photos: h.photos || [] }))
-      }));
-      S.taskCtr = S.allTasks.length + 1;
-      applyTierToTasks();
-    }
-
-    // Load tier from user metadata or a subscriptions table (simplified: check metadata)
-    const { data: { user } } = await sb.auth.getUser();
-    S.tier = user?.user_metadata?.tier || 'free';
-
-    if (!profile && S.allTasks.length === 0) {
-      show('screen-setup'); return true;
-    }
-    return false;
-  } catch(e) { console.error(e); return false; }
-  finally { setSyncing(false); }
-}
-
-function applyTierToTasks() {
-  // Sort: unlocked first, then locked
-  S.allTasks.sort((a, b) => (a.locked === b.locked ? 0 : a.locked ? 1 : -1));
-  if (S.tier === 'free') {
-    S.allTasks.forEach((t, i) => { t.locked = i >= FREE_TASK_LIMIT; });
-  } else {
-    S.allTasks.forEach(t => { t.locked = false; });
-  }
-  S.tasks = S.allTasks.filter(t => !t.locked);
-}
-
-function getActiveTasks() { return S.allTasks.filter(t => !t.locked); }
-function getLockedTasks() { return S.allTasks.filter(t => t.locked); }
-
-function setSyncing(v) {
-  S.syncing = v;
-  const el = document.getElementById('syncInd');
-  if (!el) return;
-  el.innerHTML = v ? '<span class="sync-lbl">syncing...</span>' : '<span class="sync-dot"></span>';
-}
-
-async function syncTask(task) {
-  if (!S.user) return;
-  setSyncing(true);
-  try {
-    if (task.dbId) {
-      await sb.from('tasks').update({ name: task.name, category: task.category, frequency_days: task.frequencyDays, note: task.note, due_date: task.dueDate, locked: task.locked }).eq('id', task.dbId);
-    } else {
-      const { data, error } = await sb.from('tasks').insert({ user_id: S.user.id, name: task.name, category: task.category, frequency_days: task.frequencyDays, note: task.note, due_date: task.dueDate, locked: task.locked }).select().single();
-      if (!error && data) { task.dbId = data.id; task.id = data.id; }
-    }
-  } catch(e) { console.error(e); }
-  finally { setSyncing(false); }
-}
-
-async function syncCompletion(task, date, note, photos = []) {
-  if (!S.user || !task.dbId) return;
-  setSyncing(true);
-  try {
-    await sb.from('task_history').insert({ task_id: task.dbId, user_id: S.user.id, completed_date: date, note: note || '', photos: photos });
-    await sb.from('tasks').update({ due_date: task.dueDate }).eq('id', task.dbId);
-  } catch(e) { console.error(e); }
-  finally { setSyncing(false); }
-}
-
-async function deleteTaskDb(dbId) {
-  if (!S.user || !dbId) return;
-  try { await sb.from('tasks').delete().eq('id', dbId); } catch(e) { console.error(e); }
-}
-
-async function saveProfile() {
-  if (!S.user) return;
-  try {
-    await sb.from('home_profiles').upsert({ user_id: S.user.id, home_type: S.profile.type, hvac: S.profile.hvac, year_built: S.profile.yearBuilt, ownership: S.profile.own }, { onConflict: 'user_id' });
-  } catch(e) { console.error(e); }
-}
-
-async function saveTier(tier) {
-  S.tier = tier;
-  if (S.user) {
-    await sb.auth.updateUser({ data: { tier } });
-  }
-  applyTierToTasks();
-  // Sync locked status for all tasks
-  for (const t of S.allTasks) { await syncTask(t); }
-}
-
-// ── SETUP / AI ──
-function show(id) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
-}
-
-function pick(el) {
-  const g = el.dataset.g;
-  document.querySelectorAll(`[data-g="${g}"]`).forEach(b => b.classList.remove('on'));
-  el.classList.add('on');
-  S.profile[g] = el.dataset.v;
-  const ok = S.profile.type && S.profile.hvac;
-  document.getElementById('setupBtn').disabled = !ok;
-}
-
-async function runAI() {
-  S.profile.yearBuilt = document.getElementById('yearBuilt').value || 'unknown';
-  await saveProfile();
-  show('screen-ai');
-  const msgs = ['Analyzing your home type and age...','Checking HVAC requirements...','Building your personalized schedule...','Adding seasonal timing...','Finalizing your tasks...'];
-  let i = 0;
-  const iv = setInterval(() => { document.getElementById('aiMsg').textContent = msgs[++i % msgs.length]; }, 1900);
-  try {
-    const res = await fetch('https://rkivkfmvykegnojlblpd.supabase.co/functions/v1/ai-schedule', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${SKEY}`
-      },
-      body: JSON.stringify({
-        homeType: S.profile.type,
-        hvac: S.profile.hvac,
-        yearBuilt: S.profile.yearBuilt,
-        ownership: S.profile.own
-      })
-    });
-    const parsed = await res.json();
-    clearInterval(iv);
-    S.aiBundles = parsed.bundles;
-    S.aiInsight = parsed.insight;
-  } catch(e) {
-    clearInterval(iv);
-    S.aiBundles = defaultBundles();
-    S.aiInsight = 'Based on your home, we\'ve built a comprehensive maintenance schedule to keep everything in great shape year-round.';
-  }
-  renderBundlesScreen();
-  show('screen-bundles');
-}
-
-function defaultBundles() {
-  return [
-    { id:'hvac', name:'HVAC & Air Quality', icon:'🌀', aiTag:false, tasks:[
-      {name:'Replace HVAC filter',category:'hvac',frequencyDays:90,note:'Check current filter for size'},
-      {name:'Clean air vents',category:'hvac',frequencyDays:180,note:''},
-      {name:'Annual HVAC tune-up',category:'hvac',frequencyDays:365,note:'Schedule before peak season'}]},
-    { id:'safety', name:'Safety Checks', icon:'🔒', aiTag:false, tasks:[
-      {name:'Test smoke detectors',category:'safety',frequencyDays:180,note:''},
-      {name:'Test CO detectors',category:'safety',frequencyDays:180,note:''},
-      {name:'Check fire extinguisher',category:'safety',frequencyDays:365,note:'Check pressure + expiry'}]},
-    { id:'exterior', name:'Exterior', icon:'🌿', aiTag:false, tasks:[
-      {name:'Clean gutters',category:'exterior',frequencyDays:180,note:'Spring and fall'},
-      {name:'Inspect roof',category:'exterior',frequencyDays:365,note:'Look for missing/damaged shingles'},
-      {name:'Check weatherstripping',category:'exterior',frequencyDays:365,note:''}]},
-    { id:'plumbing', name:'Plumbing', icon:'🔧', aiTag:false, tasks:[
-      {name:'Flush water heater',category:'plumbing',frequencyDays:365,note:'Removes sediment buildup'},
-      {name:'Check under-sink leaks',category:'plumbing',frequencyDays:90,note:''},
-      {name:'Clean drain strainers',category:'plumbing',frequencyDays:30,note:''}]}
-  ];
-}
-
-function renderBundlesScreen() {
-  document.getElementById('insightBox').innerHTML = `<strong>✨ Your home insight:</strong> ${S.aiInsight}`;
-  document.getElementById('bundleList').innerHTML = S.aiBundles.map(b => `
-    <div class="bundle-card on" id="bnd-${b.id}" onclick="toggleBundle('${b.id}')">
-      <div class="bc-top">
-        <div class="bc-left">
-          <div class="bc-icon">${b.icon}</div>
-          <div><div class="bc-name">${b.name} ${b.aiTag ? '<span class="ai-tag">AI</span>' : ''}</div><div class="bc-cnt">${b.tasks.length} tasks</div></div>
-        </div>
-        <div class="bc-check">✓</div>
-      </div>
-      <div class="bc-chips">${b.tasks.map(t => `<span class="bc-chip">${t.name}</span>`).join('')}</div>
-    </div>`).join('');
-  S.aiBundles.forEach(b => S.selBundles.add(b.id));
-}
-
-function toggleBundle(id) {
-  const c = document.getElementById(`bnd-${id}`);
-  if (S.selBundles.has(id)) { S.selBundles.delete(id); c.classList.remove('on'); }
-  else { S.selBundles.add(id); c.classList.add('on'); }
-}
-
-async function addBundles() {
-  const btn = document.getElementById('bundleBtn');
-  btn.disabled = true; btn.textContent = 'Saving...';
-  const allTasks = [];
-  S.aiBundles.forEach(b => {
-    if (S.selBundles.has(b.id)) b.tasks.forEach(t => allTasks.push(makeTask(t.name, t.category, t.frequencyDays, t.note)));
-  });
-  // First FREE_TASK_LIMIT are unlocked, rest are locked
-  allTasks.forEach((t, i) => { t.locked = i >= FREE_TASK_LIMIT; });
-  S.allTasks = allTasks;
-  applyTierToTasks();
-  if (S.user) { for (const t of S.allTasks) await syncTask(t); }
-  show('screen-app');
-  renderApp();
-}
-
-// ── TASKS ──
-function makeTask(name, category, frequencyDays, note = '') {
-  const offset = Math.floor(Math.random() * frequencyDays) - Math.floor(frequencyDays * 0.3);
-  const due = new Date();
-  due.setDate(due.getDate() + offset);
-  return { id: S.taskCtr++, dbId: null, name, category, frequencyDays: parseInt(frequencyDays), note, dueDate: due.toISOString().split('T')[0], locked: false, history: [] };
-}
-
-function daysTil(task) {
-  const t = new Date(); t.setHours(0,0,0,0);
-  const d = new Date(task.dueDate); d.setHours(0,0,0,0);
-  return Math.round((d - t) / 86400000);
-}
-
-function taskStatus(task) {
-  const d = daysTil(task);
-  return d < 0 ? 'overdue' : d <= 7 ? 'due-soon' : 'upcoming';
-}
-
-function fmtDue(task) {
-  const d = daysTil(task);
-  if (d < 0) return `${Math.abs(d)}d overdue`;
-  if (d === 0) return 'Due today';
-  if (d === 1) return 'Due tomorrow';
-  if (d <= 30) return `Due in ${d}d`;
-  return `Due in ${Math.round(d/30)}mo`;
-}
-
-async function completeTask(id, e) {
-  if (e) { e.stopPropagation(); e.preventDefault(); }
-  const sid = String(id);
-  const task = S.allTasks.find(t => String(t.id) === sid || String(t.dbId) === sid);
-  if (!task || task.locked) return;
-  const btn = document.querySelector(`[data-tc="${sid}"]`);
-  if (btn) { btn.classList.add('pop'); btn.textContent = '✓'; }
-  const flash = document.createElement('div'); flash.className = 'flash'; document.body.appendChild(flash);
-  setTimeout(() => flash.remove(), 500);
-  const date = new Date().toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
-  setTimeout(async () => {
-    task.history.unshift({ date, note: '', photos: [] });
-    const nd = new Date(); nd.setDate(nd.getDate() + task.frequencyDays);
-    task.dueDate = nd.toISOString().split('T')[0];
-    await syncCompletion(task, date, '');
-    toast(`✓ ${task.name} marked done`);
-    renderApp();
-  }, 380);
-}
-
-async function saveTask() {
-  if (S.tier === 'free') { closeModal('addModal'); openUpgrade('custom'); return; }
-  const name = document.getElementById('tName').value.trim();
-  if (!name) return;
-  const task = makeTask(name, document.getElementById('tCat').value, parseInt(document.getElementById('tFreq').value), document.getElementById('tNote').value.trim());
-  task.dueDate = new Date().toISOString().split('T')[0];
-  task.locked = false;
-  S.allTasks.push(task);
-  S.tasks = S.allTasks.filter(t => !t.locked);
-  await syncTask(task);
-  closeModal('addModal');
-  document.getElementById('tName').value = ''; document.getElementById('tNote').value = '';
-  toast('Task added');
-  renderApp();
-}
-
-async function snoozeTask(id) {
-  const task = S.allTasks.find(t => t.id == id);
-  if (!task) return;
-  const d = new Date(task.dueDate); d.setDate(d.getDate() + 7);
-  task.dueDate = d.toISOString().split('T')[0];
-  await syncTask(task);
-  closeModal('detailModal'); toast('Snoozed 1 week'); renderApp();
-}
-
-async function deleteTask(id) {
-  const task = S.allTasks.find(t => t.id == id);
-  const dbId = task?.dbId;
-  S.allTasks = S.allTasks.filter(t => t.id != id);
-  applyTierToTasks();
-  await deleteTaskDb(dbId);
-  closeModal('detailModal'); toast('Task deleted'); renderApp();
-}
-
-// ── RENDER ──
-function renderApp() {
-  const body = document.getElementById('appBody');
-  if (S.tab === 'dash') body.innerHTML = renderDash();
-  else if (S.tab === 'cats') body.innerHTML = renderCats();
-  else body.innerHTML = renderHistory();
-  setSyncing(false);
-}
-
-function renderDash() {
-  const active = getActiveTasks();
-  const locked = getLockedTasks();
-  const overdue = active.filter(t => daysTil(t) < 0).sort((a,b) => daysTil(a)-daysTil(b));
-  const week = active.filter(t => { const d=daysTil(t); return d>=0&&d<=7; });
-  const upcoming = active.filter(t => daysTil(t) > 7);
-  const total = S.allTasks.length;
-  const covered = active.length;
-  const pct = total > 0 ? Math.round((covered/total)*100) : 0;
-  const today = new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
-  const doneToday = active.filter(t => t.history[0]?.date === today).length;
-
-  let h = '';
-
-  // Coverage bar
-  h += `<div class="coverage-bar">
-    <div class="cov-top"><div class="cov-label">Home Coverage</div><div class="cov-pct">${pct}%</div></div>
-    <div class="cov-track"><div class="cov-fill" style="width:${pct}%"></div></div>
-    <div class="cov-msg">`;
-  if (S.tier === 'free' && locked.length > 0) {
-    h += `<strong>${covered} of ${total} tasks</strong> active. <strong>${locked.length} tasks</strong> waiting to protect your home.
-    <br><button class="cov-upgrade" onclick="openUpgrade('coverage')">Unlock full coverage →</button>`;
-  } else {
-    h += `<strong>All ${total} tasks</strong> active. Your home is fully covered. 🌿`;
-  }
-  h += `</div></div>`;
-
-  if (doneToday > 0) h += `<div class="streak"><div class="streak-icon">🔥</div><div class="streak-txt"><strong>${doneToday} task${doneToday>1?'s':''} done today.</strong> Keep it up!</div></div>`;
-
-  if (overdue.length === 0 && week.length === 0) h += `<div class="empty"><div class="ei">🌿</div><p>All caught up!<br>Nothing overdue or due this week.</p></div>`;
-  if (overdue.length > 0) h += `<div class="task-grp"><div class="section-hdr"><div class="section-lbl">Overdue <span class="cnt-badge">${overdue.length}</span></div></div>${overdue.map(taskCard).join('')}</div>`;
-  if (week.length > 0) h += `<div class="task-grp"><div class="section-hdr"><div class="section-lbl">Due This Week <span class="cnt-badge a">${week.length}</span></div></div>${week.map(taskCard).join('')}</div>`;
-  if (upcoming.length > 0) h += `<div class="task-grp"><div class="section-hdr"><div class="section-lbl">Coming Up <span class="cnt-badge g">${upcoming.length}</span></div></div>${upcoming.map(taskCard).join('')}</div>`;
-
-  // Locked preview section
-  if (locked.length > 0 && S.tier === 'free') {
-    h += `<div class="locked-section">
-      <h4>🔒 ${locked.length} more task${locked.length>1?'s':''} for your home</h4>
-      <p>Upgrade to <strong>Tended</strong> to activate your full AI-generated schedule and make sure nothing falls through the cracks.</p>
-      <div class="locked-preview">${locked.slice(0,6).map(t=>`<span class="locked-chip">${t.name}</span>`).join('')}</div>
-      <button class="btn btn-green" style="width:auto;padding:10px 24px;font-size:0.88rem;" onclick="openUpgrade('locked')">Unlock All Tasks →</button>
-    </div>`;
-  }
-
-  return h;
-}
-
-function taskCard(task) {
-  const st = taskStatus(task);
-  const cat = CATS[task.category];
-  const dc = st==='overdue'?'ov':st==='due-soon'?'td':'up';
-  if (task.locked) return `<div class="task-card locked"><span class="lock-icon">🔒</span><div class="task-info"><div class="task-name">${task.name}</div><div class="task-meta"><span class="cat-dot c-${task.category}"></span>${cat.icon} ${cat.label}</div></div></div>`;
-  const idStr = String(task.id);
-  return `<div class="task-card ${st}" onclick="openDetail('${idStr}')">
-    <button class="task-check" data-tc="${idStr}" onclick="completeTask('${idStr}',event)">✓</button>
-    <div class="task-info"><div class="task-name">${task.name}</div><div class="task-meta"><span class="cat-dot c-${task.category}"></span>${cat.icon} ${cat.label}</div></div>
-    <div class="task-due ${dc}">${fmtDue(task)}</div>
-  </div>`;
-}
-
-function renderCats() {
-  return Object.keys(CATS).map(cat => {
-    const tasks = S.allTasks.filter(t => t.category === cat);
-    if (!tasks.length) return '';
-    const cfg = CATS[cat];
-    const ov = tasks.filter(t => !t.locked && daysTil(t) < 0).length;
-    return `<div class="cat-section">
-      <div class="cat-hdr">
-        <div class="cat-circle" style="background:${cfg.color}20">${cfg.icon}</div>
-        <div class="cat-inf"><div class="cat-nm">${cfg.label}</div><div class="cat-ct">${tasks.length} task${tasks.length>1?'s':''}${ov>0?` · <span style="color:var(--red)">${ov} overdue</span>`:''}</div></div>
-      </div>
-      ${tasks.map(taskCard).join('')}
-    </div>`;
-  }).join('');
-}
-
-function renderHistory() {
-  if (S.tier === 'free') {
-    return `<div style="padding:20px;">
-      <div class="pro-gate">
-        <p>📋 <strong>Full history is a Tended feature.</strong><br>Upgrade to see your complete completion timeline, with dates and notes for every task.</p>
-        <button onclick="openUpgrade('history')">Upgrade to Tended →</button>
-      </div>
-    </div>`;
-  }
-  const all = [];
-  S.allTasks.forEach(t => t.history.forEach(h => all.push({ taskName:t.name, category:t.category, ...h })));
-  if (!all.length) return `<div class="empty"><div class="ei">📋</div><p>No completed tasks yet.<br>Mark a task done to see your history.</p></div>`;
-  return `<div class="task-grp"><div class="section-hdr"><div class="section-lbl">All Completions</div></div>
-    ${all.map(h=>`<div class="task-card upcoming" style="cursor:default;">
-      <div style="width:26px;height:26px;background:var(--green-light);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.75rem;color:var(--green);flex-shrink:0;">✓</div>
-      <div class="task-info"><div class="task-name">${h.taskName}</div><div class="task-meta"><span class="cat-dot c-${h.category}"></span>${CATS[h.category].label}</div></div>
-      <div class="task-due up">${h.date}</div>
-    </div>`).join('')}
-  </div>`;
-}
-
-// ── DETAIL MODAL ──
-function openDetail(id) {
-  const sid = String(id);
-  const task = S.allTasks.find(t => String(t.id) === sid || String(t.dbId) === sid);
-  if (!task || task.locked) return;
-  const days = daysTil(task);
-  const cat = CATS[task.category];
-  const freq = task.frequencyDays >= 365 ? 'Yearly' : task.frequencyDays >= 180 ? 'Every 6mo' : task.frequencyDays >= 90 ? 'Every 3mo' : task.frequencyDays >= 30 ? 'Monthly' : 'Weekly';
-
-  let hist = '';
-  if (S.tier === 'free') {
-    const recent = task.history.slice(0, 1);
-    hist = recent.length ? recent.map(h=>`<div class="hist-item"><div class="hist-dot"></div><div><div class="hist-date">${h.date}</div></div></div>`).join('') : '<div style="color:var(--muted);font-size:0.83rem;padding:10px 0;">No history yet.</div>';
-    if (task.history.length > 1) hist += `<div class="pro-gate" style="margin-top:10px;"><p>+${task.history.length-1} more entries. Upgrade to see full history.</p><button onclick="openUpgrade('history')">Upgrade →</button></div>`;
-  } else {
-    hist = task.history.length ? task.history.map(h=>`<div class="hist-item"><div class="hist-dot"></div><div><div class="hist-date">${h.date}</div>${h.note?`<div class="hist-note">${h.note}</div>`:''}</div></div>`).join('') : '<div style="color:var(--muted);font-size:0.83rem;padding:10px 0;">No history yet.</div>';
-  }
-
-  // Photos section (Pro only)
-  let photosSection = '';
-  if (S.tier === 'pro') {
-    // Gather all photos from history
-    const allPhotos = task.history.flatMap(h => (h.photos || []).map(url => ({ url, date: h.date })));
-    const thumbs = allPhotos.length ? `<div class="photo-preview">${allPhotos.map(p => `<div style="position:relative;"><img src="${p.url}" class="photo-thumb" onclick="window.open('${p.url}','_blank')" title="${p.date}"><div style="position:absolute;bottom:2px;left:2px;background:rgba(0,0,0,0.6);color:#fff;font-size:0.6rem;padding:1px 4px;border-radius:4px;">${p.date}</div></div>`).join('')}</div>` : '';
-    const idStr = String(task.id);
-    photosSection = `<div style="margin-top:20px;">
-      <div class="f-label" style="display:flex;justify-content:space-between;align-items:center;">
-        Photos & Receipts
-        <button onclick="exportPDF('${idStr}')" style="background:none;border:none;color:var(--green);font-family:'DM Sans',sans-serif;font-size:0.78rem;font-weight:600;cursor:pointer;">Export PDF →</button>
-      </div>
-      ${thumbs}
-      <div class="photo-area" onclick="document.getElementById('photoInput-${idStr}').click()" id="photoArea-${idStr}">
-        <input type="file" id="photoInput-${idStr}" accept="image/*,application/pdf" multiple onchange="handlePhotos('${idStr}', this)">
-        <div style="font-size:1.5rem;margin-bottom:6px;">📷</div>
-        <div style="font-size:0.82rem;color:var(--muted);">Tap to add photos or receipts</div>
-      </div>
-    </div>`;
-  } else if (S.tier === 'home') {
-    photosSection = `<div style="margin-top:20px;"><div class="pro-gate"><p>📷 <strong>Photos & receipts</strong> are a Tended Pro feature. Attach timestamped proof to every completion.</p><button onclick="openUpgrade('photos')">Upgrade to Pro →</button></div></div>`;
-  }
-
-  document.getElementById('detailContent').innerHTML = `
-    <div style="padding:18px 22px 14px;border-bottom:1px solid var(--border);">
-      <div class="td-name">${task.name}</div>
-      <div class="td-chips">
-        <span class="td-chip">${cat.icon} ${cat.label}</span>
-        <span class="td-chip">${freq}</span>
-        <span class="td-chip ${days<0?'r':'g'}">${fmtDue(task)}</span>
-      </div>
-      ${task.note?`<div style="margin-top:10px;font-size:0.8rem;color:var(--muted);font-style:italic;">${task.note}</div>`:''}
-    </div>
-    <div style="padding:18px 22px;">
-      <button class="big-btn" onclick="completeTask('${String(task.id)}'); closeModal('detailModal'); renderApp();">✓ Mark as Done</button>
-      <button class="snooze-btn" onclick="snoozeTask('${String(task.id)}')">⏰ Snooze 1 week</button>
-      <div style="margin-top:22px;"><div class="f-label">Completion History</div><div>${hist}</div></div>
-      ${photosSection}
-      <div style="margin-top:18px;">
-        <button onclick="deleteTask('${String(task.id)}')" style="width:100%;background:var(--red-light);color:var(--red);border:none;border-radius:10px;padding:11px;font-family:'DM Sans',sans-serif;font-size:0.83rem;font-weight:500;cursor:pointer;">Delete Task</button>
-      </div>
-    </div>`;
-  openModal('detailModal');
-}
-
-async function handlePhotos(taskId, input) {
-  if (!input.files || !input.files.length) return;
-  if (!S.user) return;
-  const sid = String(taskId);
-  const task = S.allTasks.find(t => String(t.id) === sid || String(t.dbId) === sid);
-  if (!task) return;
-
-  const area = document.getElementById('photoArea-' + sid);
-  if (area) area.innerHTML = '<div style="padding:12px;text-align:center;color:var(--muted);font-size:0.85rem;">Uploading...</div>';
-
-  const uploaded = [];
-  for (const file of input.files) {
-    try {
-      const ext = file.name.split('.').pop();
-      const path = `${S.user.id}/${sid}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-      const { error } = await sb.storage.from('task-photos').upload(path, file, { upsert: false });
-      if (error) throw error;
-      const { data: urlData } = sb.storage.from('task-photos').getPublicUrl(path);
-      // Use signed URL instead since bucket is private
-      const { data: signed } = await sb.storage.from('task-photos').createSignedUrl(path, 60 * 60 * 24 * 365);
-      if (signed?.signedUrl) uploaded.push(signed.signedUrl);
-    } catch (e) {
-      console.error('Upload error:', e);
-      toast('Upload failed: ' + e.message);
-    }
-  }
-
-  if (uploaded.length) {
-    // Add to latest history entry or create one
-    const date = new Date().toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
-    if (task.history.length && task.history[0].date === date) {
-      task.history[0].photos = [...(task.history[0].photos || []), ...uploaded];
-    } else {
-      task.history.unshift({ date, note: '', photos: uploaded });
-    }
-    await syncCompletion(task, date, '', uploaded);
-    toast(`${uploaded.length} photo${uploaded.length>1?'s':''} saved ✓`);
-    openDetail(sid); // refresh the modal
-  }
-}
-
-async function exportPDF(taskId) {
-  const sid = String(taskId);
-  const task = S.allTasks.find(t => String(t.id) === sid || String(t.dbId) === sid);
-  if (!task) return;
-  toast('Generating PDF...');
-
-  // Build HTML content for PDF
-  const histRows = task.history.map(h => {
-    const photos = (h.photos || []).map(url => `<img src="${url}" style="width:80px;height:80px;object-fit:cover;border-radius:6px;margin:2px;">`).join('');
-    return `<tr style="border-bottom:1px solid #eee;">
-      <td style="padding:8px;font-size:13px;">${h.date}</td>
-      <td style="padding:8px;font-size:13px;">${h.note || '—'}</td>
-      <td style="padding:8px;">${photos || '—'}</td>
-    </tr>`;
-  }).join('');
-
-  const html = `<!DOCTYPE html>
-<html>
-<head><meta charset="utf-8"><title>${task.name} — Maintenance Record</title>
-<style>
-  body { font-family: -apple-system, sans-serif; padding: 40px; color: #1a1a1a; }
-  h1 { font-size: 22px; margin-bottom: 4px; }
-  .meta { color: #666; font-size: 13px; margin-bottom: 24px; }
-  table { width: 100%; border-collapse: collapse; }
-  th { text-align: left; padding: 8px; background: #f5f5f5; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; }
-  .footer { margin-top: 32px; font-size: 11px; color: #999; }
-</style>
-</head>
-<body>
-  <h1>${task.name}</h1>
-  <div class="meta">Category: ${task.category} &nbsp;|&nbsp; Every ${task.frequencyDays} days &nbsp;|&nbsp; Generated: ${new Date().toLocaleDateString()}</div>
-  ${task.note ? `<p style="font-size:13px;color:#555;margin-bottom:20px;font-style:italic;">${task.note}</p>` : ''}
-  <table>
-    <thead><tr><th>Date</th><th>Notes</th><th>Photos</th></tr></thead>
-    <tbody>${histRows || '<tr><td colspan="3" style="padding:12px;color:#999;">No history yet.</td></tr>'}</tbody>
-  </table>
-  <div class="footer">Generated by Tended &mdash; usetended.com</div>
-</body>
-</html>`;
-
-  const blob = new Blob([html], { type: 'text/html' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `${task.name.replace(/[^a-z0-9]/gi,'_')}_maintenance_record.html`;
-  a.click();
-  URL.revokeObjectURL(url);
-  toast('PDF downloaded ✓');
-}
-
-// ── UPGRADE ──
-let upgradeContext = '';
-function openUpgrade(ctx = '') {
-  upgradeContext = ctx;
-  const sub = document.getElementById('upgradeSubtext');
-  const locked = getLockedTasks();
-  if (ctx === 'coverage' || ctx === 'locked') {
-    sub.textContent = `Your home has ${locked.length} task${locked.length>1?'s':''} waiting. Upgrade to make sure nothing gets missed.`;
-  } else if (ctx === 'custom') {
-    sub.textContent = 'Adding custom tasks requires Tended or Tended Pro.';
-  } else if (ctx === 'history') {
-    sub.textContent = 'Unlock your full completion history with Tended or Tended Pro.';
-  } else if (ctx === 'photos') {
-    sub.textContent = 'Photos, receipts, and timestamped proof require Tended Pro.';
-  } else {
-    sub.textContent = 'Unlock your full home schedule and never miss a maintenance task.';
-  }
-  openModal('upgradeModal');
-}
-
-// ── STRIPE ──
-const STRIPE_PRICES = {
-  home_monthly: 'price_1TCaeNCSeR0nltLO6W9x8ZQh',
-  home_annual:  'price_1TCaeNCSeR0nltLOP2iTDrbb',
-  pro_monthly:  'price_1TCaePCSeR0nltLOEkWaygve',
-  pro_annual:   'price_1TCaeRCSeR0nltLOscYwDOrn',
-};
-
-async function upgradeTo(plan) {
-  if (!S.user) { openModal('upgradeModal'); return; }
-  const btn = event?.target;
-  if (btn) { btn.disabled = true; btn.textContent = 'Loading...'; }
-
-  try {
-    const priceId = STRIPE_PRICES[plan];
-    const res = await fetch(`${SURL}/functions/v1/create-checkout`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SKEY}` },
-      body: JSON.stringify({ priceId, userId: S.user.id, userEmail: S.user.email })
-    });
-    const { url, error } = await res.json();
-    if (error) throw new Error(error);
-    window.location.href = url;
-  } catch (err) {
-    toast('Something went wrong. Please try again.');
-    if (btn) { btn.disabled = false; btn.textContent = 'Try Again'; }
-  }
-}
-
-async function openCustomerPortal() {
-  if (!S.user) return;
-  try {
-    const res = await fetch(`${SURL}/functions/v1/create-checkout`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SKEY}` },
-      body: JSON.stringify({ priceId: null, userId: S.user.id, userEmail: S.user.email })
-    });
-    const { url } = await res.json();
-    if (url) window.location.href = url;
-  } catch(e) { toast('Could not open billing portal.'); }
-}
-
-async function cancelSubscription() {
-  if (!confirm('Are you sure? You\'ll keep access until the end of your billing period.')) return;
-  try {
-    const res = await fetch(`${SURL}/functions/v1/cancel-subscription`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SKEY}` },
-      body: JSON.stringify({ userId: S.user.id })
-    });
-    const { success } = await res.json();
-    if (success) {
-      toast('Subscription cancelled. You\'ll keep access until the period ends.');
-      closeModal('profileModal');
-    }
-  } catch(e) { toast('Could not cancel. Please try again.'); }
-}
-
-// ── PROFILE ──
-function openProfile() {
-  const tierLabel = S.tier === 'pro' ? 'Tended Pro' : S.tier === 'home' ? 'Tended' : 'Starter (Free)';
-  const tierColor = S.tier === 'pro' ? 'var(--gold)' : S.tier === 'home' ? 'var(--green)' : 'var(--muted)';
-
-  document.getElementById('profileContent').innerHTML = `
-    <div style="margin-bottom:24px;">
-      <div class="f-label">Account</div>
-      <div style="background:var(--surface2);border-radius:10px;padding:14px 16px;">
-        <div style="font-weight:600;font-size:0.92rem;">${S.user?.email}</div>
-        <div style="font-size:0.78rem;color:var(--muted);margin-top:4px;">Member since ${new Date(S.user?.created_at || Date.now()).toLocaleDateString('en-US',{month:'long',year:'numeric'})}</div>
-      </div>
-    </div>
-
-    <div style="margin-bottom:24px;">
-      <div class="f-label">Current Plan</div>
-      <div style="background:var(--surface2);border-radius:10px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;">
-        <div>
-          <div style="font-weight:700;color:${tierColor};">${tierLabel}</div>
-          <div style="font-size:0.78rem;color:var(--muted);margin-top:2px;">${S.tier === 'free' ? 'Up to 3 tasks' : S.tier === 'home' ? 'Full home coverage' : 'Full coverage + records'}</div>
-        </div>
-        ${S.tier !== 'pro' ? `<button onclick="closeModal('profileModal'); openUpgrade('profile');" style="background:var(--green);color:#fff;border:none;border-radius:8px;padding:8px 14px;font-family:'DM Sans',sans-serif;font-size:0.78rem;font-weight:600;cursor:pointer;">Upgrade</button>` : ''}
-      </div>
-    </div>
-
-    <div style="margin-bottom:24px;">
-      <div class="f-label">Home Profile</div>
-      <div style="background:var(--surface2);border-radius:10px;padding:14px 16px;">
-        ${S.profile.type ? `
-          <div style="font-size:0.85rem;display:grid;gap:6px;">
-            <div>🏠 ${S.profile.type?.charAt(0).toUpperCase() + S.profile.type?.slice(1) || 'Not set'}</div>
-            <div>🌀 ${S.profile.hvac || 'Not set'}</div>
-            <div>📅 Built ${S.profile.yearBuilt || 'Unknown'}</div>
-          </div>` : `<div style="font-size:0.85rem;color:var(--muted);">No home profile set up yet.</div>`}
-        <button onclick="closeModal('profileModal'); resetHomeProfile();" style="margin-top:12px;background:none;border:none;color:var(--green);font-family:'DM Sans',sans-serif;font-size:0.82rem;font-weight:600;cursor:pointer;padding:0;">Edit home profile →</button>
-      </div>
-    </div>
-
-    <div style="margin-bottom:24px;">
-      <div class="f-label">Notifications</div>
-      <div style="background:var(--surface2);border-radius:10px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;">
-        <div style="font-size:0.85rem;">Daily reminders at 8am</div>
-        <button onclick="disablePush(); toast('Reminders disabled');" style="background:none;border:1px solid var(--border);border-radius:6px;padding:5px 12px;font-family:'DM Sans',sans-serif;font-size:0.75rem;cursor:pointer;color:var(--muted);">Turn off</button>
-      </div>
-    </div>
-
-    ${S.tier !== 'free' ? `
-    <div style="margin-bottom:24px;">
-      <div class="f-label">Billing</div>
-      <div style="display:grid;gap:8px;">
-        <button onclick="openCustomerPortal()" style="width:100%;background:var(--surface2);border:none;border-radius:10px;padding:13px;font-family:'DM Sans',sans-serif;font-size:0.88rem;font-weight:500;cursor:pointer;text-align:left;">Manage billing & invoices →</button>
-        <button onclick="cancelSubscription()" style="width:100%;background:var(--red-light);color:var(--red);border:none;border-radius:10px;padding:13px;font-family:'DM Sans',sans-serif;font-size:0.88rem;font-weight:500;cursor:pointer;text-align:left;">Cancel subscription</button>
-      </div>
-    </div>` : ''}
-
-    <div style="display:grid;gap:8px;margin-top:8px;">
-      <button onclick="closeModal('profileModal'); doSignOut();" style="width:100%;background:var(--surface2);border:none;border-radius:10px;padding:13px;font-family:'DM Sans',sans-serif;font-size:0.88rem;font-weight:500;cursor:pointer;">Sign out</button>
-      <button onclick="closeModal('profileModal'); deleteAccount();" style="width:100%;background:none;border:none;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:0.78rem;cursor:pointer;padding:8px;">Delete account</button>
-    </div>
-  `;
-  openModal('profileModal');
-}
-
-async function resetHomeProfile() {
-  if (!S.user) return;
-  closeModal('profileModal');
-  await sb.from('home_profiles').delete().eq('user_id', S.user.id);
-  await sb.from('tasks').delete().eq('user_id', S.user.id);
-  S.profile = {};
-  S.allTasks = [];
-  S.tasks = [];
-  show('screen-setup');
-}
-
-async function deleteAccount() {
-  if (!confirm('This will permanently delete your account and all your data. Are you sure?')) return;
-  if (!confirm('This cannot be undone. Confirm deletion?')) return;
-  try {
-    // Delete all user data
-    await sb.from('tasks').delete().eq('user_id', S.user.id);
-    await sb.from('task_history').delete().eq('user_id', S.user.id);
-    await sb.from('home_profiles').delete().eq('user_id', S.user.id);
-    await sb.from('push_subscriptions').delete().eq('user_id', S.user.id);
-    await doSignOut();
-    toast('Account deleted.');
-  } catch(e) { toast('Could not delete account. Contact support.'); }
-}
-
-// Check for successful upgrade redirect
-if (window.location.search.includes('upgraded=true')) {
-  window.history.replaceState({}, '', '/');
-  setTimeout(() => toast('🎉 Welcome to your new plan!'), 1000);
-}
-function openModal(id) { document.getElementById(id).classList.add('open'); }
-function closeModal(id) { document.getElementById(id).classList.remove('open'); }
-function openAddTask() { openModal('addModal'); }
-
-document.querySelectorAll('.overlay').forEach(o => {
-  o.addEventListener('click', e => { if (e.target === o) o.classList.remove('open'); });
+// Scroll nav effect
+window.addEventListener('scroll', () => {
+  document.getElementById('nav').classList.toggle('scrolled', window.scrollY > 20);
 });
 
-// ── TABS ──
-function switchTab(tab, btn) {
-  S.tab = tab;
-  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-  btn.classList.add('active');
-  renderApp();
-}
+// Email submission
+async function submitEmail(source) {
+  const emailId = source === 'hero' ? 'heroEmail' : 'finalEmail';
+  const btnId = source === 'hero' ? 'heroBtn' : 'finalBtn';
+  const formId = source === 'hero' ? 'heroForm' : 'finalForm';
+  const successId = source === 'hero' ? 'heroSuccess' : 'finalSuccess';
 
-// ── TOAST ──
-function toast(msg) {
-  const el = document.getElementById('toast');
-  el.textContent = msg;
-  el.classList.add('show');
-  setTimeout(() => el.classList.remove('show'), 2600);
-}
+  const email = document.getElementById(emailId).value.trim();
+  const btn = document.getElementById(btnId);
 
-// ── PUSH NOTIFICATIONS ──
-const VAPID_PUBLIC = 'BGWOr3yNPAQn5fapy7oTR4iTKxE4W8G7ZfgbOSWq0lQuWbkAOZ3z6q-c7c1Kj7aqPIuCJzzpkEAqFFhS9_qpCvw';
+  if (!email || !email.includes('@')) {
+    document.getElementById(emailId).style.borderColor = '#c0392b';
+    setTimeout(() => document.getElementById(emailId).style.borderColor = '', 1500);
+    return;
+  }
 
-async function initPush() {
-  if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+  btn.disabled = true;
+  btn.textContent = 'Joining...';
+
   try {
-    // Register service worker
-    const reg = await navigator.serviceWorker.register('/sw.js');
-    console.log('SW registered');
+    const { error } = await sb.from('waitlist').upsert({
+      email: email.toLowerCase(),
+      source: source,
+      joined_at: new Date().toISOString()
+    }, { onConflict: 'email', ignoreDuplicates: true });
 
-    // Check if already subscribed
-    const existing = await reg.pushManager.getSubscription();
-    if (existing) {
-      await savePushSubscription(existing);
-      return;
+    if (error) throw error;
+
+    document.getElementById(formId).style.display = 'none';
+    document.getElementById(successId).classList.add('show');
+
+  } catch(e) {
+    btn.disabled = false;
+    btn.textContent = source === 'hero' ? 'Notify Me →' : 'Join Waitlist';
+    // Still show success even if duplicate
+    document.getElementById(formId).style.display = 'none';
+    document.getElementById(successId).classList.add('show');
+  }
+}
+
+// Enter key support
+['heroEmail', 'finalEmail'].forEach(id => {
+  const el = document.getElementById(id);
+  if (el) el.addEventListener('keydown', e => {
+    if (e.key === 'Enter') submitEmail(id === 'heroEmail' ? 'hero' : 'final');
+  });
+});
+
+// Animate elements on scroll
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      e.target.style.opacity = '1';
+      e.target.style.transform = 'translateY(0)';
     }
+  });
+}, { threshold: 0.1 });
 
-    // Ask for permission after a short delay (not immediately on load)
-    setTimeout(() => askPushPermission(reg), 3000);
-  } catch(e) {
-    console.error('Push init error:', e);
-  }
-}
-
-async function askPushPermission(reg) {
-  // Only ask if not already decided
-  if (Notification.permission !== 'default') return;
-  showPushPrompt(reg);
-}
-
-function showPushPrompt(reg) {
-  // Create a soft in-app prompt instead of jumping straight to browser dialog
-  const prompt = document.createElement('div');
-  prompt.id = 'pushPrompt';
-  prompt.style.cssText = `
-    position: fixed; bottom: 96px; left: 16px; right: 16px;
-    background: var(--ink); color: #fff; border-radius: 14px;
-    padding: 16px 18px; z-index: 300; animation: sup 0.3s ease;
-    display: flex; align-items: flex-start; gap: 12px; max-width: 398px; margin: 0 auto;
-  `;
-  prompt.innerHTML = `
-    <div style="font-size:1.4rem;flex-shrink:0;">🔔</div>
-    <div style="flex:1;">
-      <div style="font-weight:600;font-size:0.9rem;margin-bottom:4px;">Get reminded when tasks are due</div>
-      <div style="font-size:0.78rem;opacity:0.75;margin-bottom:12px;line-height:1.4;">We'll send you a daily nudge when maintenance is coming up or overdue.</div>
-      <div style="display:flex;gap:8px;">
-        <button onclick="enablePush('${reg ? 'yes' : 'no'}')" style="background:var(--green);color:#fff;border:none;border-radius:8px;padding:8px 16px;font-family:'DM Sans',sans-serif;font-size:0.82rem;font-weight:600;cursor:pointer;flex:1;">Enable Reminders</button>
-        <button onclick="dismissPushPrompt()" style="background:rgba(255,255,255,0.12);color:#fff;border:none;border-radius:8px;padding:8px 14px;font-family:'DM Sans',sans-serif;font-size:0.82rem;cursor:pointer;">Not now</button>
-      </div>
-    </div>
-  `;
-  document.body.appendChild(prompt);
-
-  // Store reg reference
-  window._pushReg = reg;
-}
-
-async function enablePush() {
-  dismissPushPrompt();
-  const reg = window._pushReg;
-  if (!reg) return;
-
-  try {
-    const permission = await Notification.requestPermission();
-    if (permission !== 'granted') {
-      toast('Notifications blocked. Enable in browser settings.');
-      return;
-    }
-
-    const subscription = await reg.pushManager.subscribe({
-      userVisibleOnly: true,
-      applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC)
-    });
-
-    await savePushSubscription(subscription);
-    toast('🔔 Reminders enabled!');
-  } catch(e) {
-    console.error('Push subscribe error:', e);
-    toast('Could not enable notifications.');
-  }
-}
-
-function dismissPushPrompt() {
-  const p = document.getElementById('pushPrompt');
-  if (p) p.remove();
-  // Remember dismissed for 7 days
-  localStorage.setItem('pushDismissed', Date.now().toString());
-}
-
-async function savePushSubscription(subscription) {
-  if (!S.user) return;
-  try {
-    const sub = subscription.toJSON();
-    await sb.from('push_subscriptions').upsert({
-      user_id: S.user.id,
-      subscription: sub,
-      updated_at: new Date().toISOString()
-    }, { onConflict: 'user_id' });
-  } catch(e) {
-    console.error('Save subscription error:', e);
-  }
-}
-
-async function disablePush() {
-  if (!('serviceWorker' in navigator)) return;
-  const reg = await navigator.serviceWorker.getRegistration();
-  if (!reg) return;
-  const sub = await reg.pushManager.getSubscription();
-  if (sub) await sub.unsubscribe();
-  if (S.user) await sb.from('push_subscriptions').delete().eq('user_id', S.user.id);
-  toast('Reminders disabled');
-}
-
-function urlBase64ToUint8Array(base64String) {
-  const padding = '='.repeat((4 - base64String.length % 4) % 4);
-  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
-  const rawData = window.atob(base64);
-  return Uint8Array.from([...rawData].map(c => c.charCodeAt(0)));
-}
-
-// Check if push was recently dismissed
-function shouldShowPushPrompt() {
-  const dismissed = localStorage.getItem('pushDismissed');
-  if (!dismissed) return true;
-  const days = (Date.now() - parseInt(dismissed)) / (1000 * 60 * 60 * 24);
-  return days > 7;
-}
-
-boot();
+document.querySelectorAll('.feat-card, .step, .review, .price-card, .problem-item, .ai-point').forEach(el => {
+  el.style.opacity = '0';
+  el.style.transform = 'translateY(24px)';
+  el.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+  observer.observe(el);
+});
 </script>
 </body>
 </html>
