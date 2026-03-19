@@ -411,7 +411,7 @@ body {
       <div class="hdr-btns">
         <div id="syncInd"><span class="sync-dot"></span></div>
         <button class="icon-btn" onclick="openUpgrade()" title="Upgrade">🌿</button>
-        <button class="icon-btn" onclick="doSignOut()" title="Sign out">👤</button>
+        <button class="icon-btn" onclick="openProfile()" title="Profile">👤</button>
       </div>
     </div>
     <div class="nav-tabs">
@@ -504,10 +504,23 @@ body {
 
     </div>
     <div class="modal-foot">
-      <button class="btn btn-green" onclick="upgradeTo('home')">Start with Tended →</button>
-      <button class="btn" style="background:var(--gold);color:#fff;" onclick="upgradeTo('pro')">Start with Tended Pro →</button>
+      <button class="btn btn-green" onclick="upgradeTo('home_monthly')">Start Tended — $3.99/mo →</button>
+      <button class="btn" style="background:var(--gold);color:#fff;" onclick="upgradeTo('pro_monthly')">Start Tended Pro — $6.99/mo →</button>
+      <button class="btn btn-surface" style="font-size:0.78rem;" onclick="upgradeTo('home_annual')">Annual plans: Tended $24.99/yr · Pro $44.99/yr</button>
       <button class="btn btn-surface" onclick="closeModal('upgradeModal')">Maybe later</button>
     </div>
+  </div>
+</div>
+
+<!-- PROFILE MODAL -->
+<div class="overlay" id="profileModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-hdr">
+      <div class="modal-title">Profile & Settings</div>
+      <button class="modal-x" onclick="closeModal('profileModal')">✕</button>
+    </div>
+    <div class="modal-body" id="profileContent"></div>
   </div>
 </div>
 
@@ -1102,17 +1115,154 @@ function openUpgrade(ctx = '') {
   openModal('upgradeModal');
 }
 
-async function upgradeTo(tier) {
-  // In production: trigger Stripe or IAP checkout here
-  // For demo: directly apply the tier
-  const t = tier === 'pro' ? 'pro' : 'home';
-  await saveTier(t);
-  closeModal('upgradeModal');
-  toast(t === 'pro' ? '🎉 Welcome to Tended Pro!' : '🎉 Welcome to Tended!');
-  renderApp();
+// ── STRIPE ──
+const STRIPE_PRICES = {
+  home_monthly: 'price_1TCaeNCSeR0nltLO6W9x8ZQh',
+  home_annual:  'price_1TCaeNCSeR0nltLOP2iTDrbb',
+  pro_monthly:  'price_1TCaePCSeR0nltLOEkWaygve',
+  pro_annual:   'price_1TCaeRCSeR0nltLOscYwDOrn',
+};
+
+async function upgradeTo(plan) {
+  if (!S.user) { openModal('upgradeModal'); return; }
+  const btn = event?.target;
+  if (btn) { btn.disabled = true; btn.textContent = 'Loading...'; }
+
+  try {
+    const priceId = STRIPE_PRICES[plan];
+    const res = await fetch(`${SURL}/functions/v1/create-checkout`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SKEY}` },
+      body: JSON.stringify({ priceId, userId: S.user.id, userEmail: S.user.email })
+    });
+    const { url, error } = await res.json();
+    if (error) throw new Error(error);
+    window.location.href = url;
+  } catch (err) {
+    toast('Something went wrong. Please try again.');
+    if (btn) { btn.disabled = false; btn.textContent = 'Try Again'; }
+  }
 }
 
-// ── MODALS ──
+async function openCustomerPortal() {
+  if (!S.user) return;
+  try {
+    const res = await fetch(`${SURL}/functions/v1/create-checkout`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SKEY}` },
+      body: JSON.stringify({ priceId: null, userId: S.user.id, userEmail: S.user.email })
+    });
+    const { url } = await res.json();
+    if (url) window.location.href = url;
+  } catch(e) { toast('Could not open billing portal.'); }
+}
+
+async function cancelSubscription() {
+  if (!confirm('Are you sure? You\'ll keep access until the end of your billing period.')) return;
+  try {
+    const res = await fetch(`${SURL}/functions/v1/cancel-subscription`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SKEY}` },
+      body: JSON.stringify({ userId: S.user.id })
+    });
+    const { success } = await res.json();
+    if (success) {
+      toast('Subscription cancelled. You\'ll keep access until the period ends.');
+      closeModal('profileModal');
+    }
+  } catch(e) { toast('Could not cancel. Please try again.'); }
+}
+
+// ── PROFILE ──
+function openProfile() {
+  const tierLabel = S.tier === 'pro' ? 'Tended Pro' : S.tier === 'home' ? 'Tended' : 'Starter (Free)';
+  const tierColor = S.tier === 'pro' ? 'var(--gold)' : S.tier === 'home' ? 'var(--green)' : 'var(--muted)';
+
+  document.getElementById('profileContent').innerHTML = `
+    <div style="margin-bottom:24px;">
+      <div class="f-label">Account</div>
+      <div style="background:var(--surface2);border-radius:10px;padding:14px 16px;">
+        <div style="font-weight:600;font-size:0.92rem;">${S.user?.email}</div>
+        <div style="font-size:0.78rem;color:var(--muted);margin-top:4px;">Member since ${new Date(S.user?.created_at || Date.now()).toLocaleDateString('en-US',{month:'long',year:'numeric'})}</div>
+      </div>
+    </div>
+
+    <div style="margin-bottom:24px;">
+      <div class="f-label">Current Plan</div>
+      <div style="background:var(--surface2);border-radius:10px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;">
+        <div>
+          <div style="font-weight:700;color:${tierColor};">${tierLabel}</div>
+          <div style="font-size:0.78rem;color:var(--muted);margin-top:2px;">${S.tier === 'free' ? 'Up to 3 tasks' : S.tier === 'home' ? 'Full home coverage' : 'Full coverage + records'}</div>
+        </div>
+        ${S.tier !== 'pro' ? `<button onclick="closeModal('profileModal'); openUpgrade('profile');" style="background:var(--green);color:#fff;border:none;border-radius:8px;padding:8px 14px;font-family:'DM Sans',sans-serif;font-size:0.78rem;font-weight:600;cursor:pointer;">Upgrade</button>` : ''}
+      </div>
+    </div>
+
+    <div style="margin-bottom:24px;">
+      <div class="f-label">Home Profile</div>
+      <div style="background:var(--surface2);border-radius:10px;padding:14px 16px;">
+        ${S.profile.type ? `
+          <div style="font-size:0.85rem;display:grid;gap:6px;">
+            <div>🏠 ${S.profile.type?.charAt(0).toUpperCase() + S.profile.type?.slice(1) || 'Not set'}</div>
+            <div>🌀 ${S.profile.hvac || 'Not set'}</div>
+            <div>📅 Built ${S.profile.yearBuilt || 'Unknown'}</div>
+          </div>` : `<div style="font-size:0.85rem;color:var(--muted);">No home profile set up yet.</div>`}
+        <button onclick="closeModal('profileModal'); resetHomeProfile();" style="margin-top:12px;background:none;border:none;color:var(--green);font-family:'DM Sans',sans-serif;font-size:0.82rem;font-weight:600;cursor:pointer;padding:0;">Edit home profile →</button>
+      </div>
+    </div>
+
+    <div style="margin-bottom:24px;">
+      <div class="f-label">Notifications</div>
+      <div style="background:var(--surface2);border-radius:10px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;">
+        <div style="font-size:0.85rem;">Daily reminders at 8am</div>
+        <button onclick="disablePush(); toast('Reminders disabled');" style="background:none;border:1px solid var(--border);border-radius:6px;padding:5px 12px;font-family:'DM Sans',sans-serif;font-size:0.75rem;cursor:pointer;color:var(--muted);">Turn off</button>
+      </div>
+    </div>
+
+    ${S.tier !== 'free' ? `
+    <div style="margin-bottom:24px;">
+      <div class="f-label">Billing</div>
+      <div style="display:grid;gap:8px;">
+        <button onclick="openCustomerPortal()" style="width:100%;background:var(--surface2);border:none;border-radius:10px;padding:13px;font-family:'DM Sans',sans-serif;font-size:0.88rem;font-weight:500;cursor:pointer;text-align:left;">Manage billing & invoices →</button>
+        <button onclick="cancelSubscription()" style="width:100%;background:var(--red-light);color:var(--red);border:none;border-radius:10px;padding:13px;font-family:'DM Sans',sans-serif;font-size:0.88rem;font-weight:500;cursor:pointer;text-align:left;">Cancel subscription</button>
+      </div>
+    </div>` : ''}
+
+    <div style="display:grid;gap:8px;margin-top:8px;">
+      <button onclick="doSignOut()" style="width:100%;background:var(--surface2);border:none;border-radius:10px;padding:13px;font-family:'DM Sans',sans-serif;font-size:0.88rem;font-weight:500;cursor:pointer;">Sign out</button>
+      <button onclick="deleteAccount()" style="width:100%;background:none;border:none;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:0.78rem;cursor:pointer;padding:8px;">Delete account</button>
+    </div>
+  `;
+  openModal('profileModal');
+}
+
+async function resetHomeProfile() {
+  // Delete profile so setup runs again
+  if (!S.user) return;
+  await sb.from('home_profiles').delete().eq('user_id', S.user.id);
+  S.profile = {};
+  show('screen-setup');
+}
+
+async function deleteAccount() {
+  if (!confirm('This will permanently delete your account and all your data. Are you sure?')) return;
+  if (!confirm('This cannot be undone. Confirm deletion?')) return;
+  try {
+    // Delete all user data
+    await sb.from('tasks').delete().eq('user_id', S.user.id);
+    await sb.from('task_history').delete().eq('user_id', S.user.id);
+    await sb.from('home_profiles').delete().eq('user_id', S.user.id);
+    await sb.from('push_subscriptions').delete().eq('user_id', S.user.id);
+    await doSignOut();
+    toast('Account deleted.');
+  } catch(e) { toast('Could not delete account. Contact support.'); }
+}
+
+// Check for successful upgrade redirect
+if (window.location.search.includes('upgraded=true')) {
+  window.history.replaceState({}, '', '/');
+  setTimeout(() => toast('🎉 Welcome to your new plan!'), 1000);
+}
 function openModal(id) { document.getElementById(id).classList.add('open'); }
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
 function openAddTask() { openModal('addModal'); }
