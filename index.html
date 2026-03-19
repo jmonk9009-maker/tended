@@ -639,6 +639,12 @@ function showAuthMsg(msg, ok) {
 
 async function doSignOut() {
   await sb.auth.signOut();
+  S.user = null;
+  S.tier = 'free';
+  S.allTasks = [];
+  S.tasks = [];
+  S.profile = {};
+  show('screen-auth');
 }
 
 // ── DATA ──
