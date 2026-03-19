@@ -1237,10 +1237,13 @@ function openProfile() {
 }
 
 async function resetHomeProfile() {
-  // Delete profile so setup runs again
   if (!S.user) return;
+  closeModal('profileModal');
   await sb.from('home_profiles').delete().eq('user_id', S.user.id);
+  await sb.from('tasks').delete().eq('user_id', S.user.id);
   S.profile = {};
+  S.allTasks = [];
+  S.tasks = [];
   show('screen-setup');
 }
 
