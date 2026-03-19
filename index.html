@@ -748,20 +748,21 @@ async function runAI() {
   let i = 0;
   const iv = setInterval(() => { document.getElementById('aiMsg').textContent = msgs[++i % msgs.length]; }, 1900);
   try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
+    const res = await fetch('https://rkivkfmvykegnojlblpd.supabase.co/functions/v1/ai-schedule', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${SKEY}`
+      },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514', max_tokens: 1000,
-        messages: [{ role: 'user', content: `You are a home maintenance expert. Home: type=${S.profile.type}, hvac=${S.profile.hvac}, year=${S.profile.yearBuilt}, ownership=${S.profile.own||'owner'}.
-Generate a personalized maintenance schedule. Return ONLY JSON (no markdown):
-{"insight":"2 specific sentences about this home's needs","bundles":[{"id":"hvac","name":"HVAC & Air Quality","icon":"🌀","aiTag":true,"tasks":[{"name":"Task","category":"hvac","frequencyDays":90,"note":"tip"}]}]}
-Rules: 4-5 bundles, 3-5 tasks each, frequencyDays one of 7/14/30/90/180/365, categories: hvac/plumbing/exterior/kitchen/safety/general, specific actionable names, genuinely useful notes. If pre-1980 add older-home tasks. If condo/apartment skip exterior gutters/roof.` }]
+        homeType: S.profile.type,
+        hvac: S.profile.hvac,
+        yearBuilt: S.profile.yearBuilt,
+        ownership: S.profile.own
       })
     });
-    const d = await res.json();
+    const parsed = await res.json();
     clearInterval(iv);
-    const txt = d.content.find(b => b.type === 'text')?.text || '';
-    const parsed = JSON.parse(txt.replace(/```json|```/g,'').trim());
     S.aiBundles = parsed.bundles;
     S.aiInsight = parsed.insight;
   } catch(e) {
