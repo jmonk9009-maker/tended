@@ -717,11 +717,11 @@ async function syncTask(task) {
   finally { setSyncing(false); }
 }
 
-async function syncCompletion(task, date, note) {
+async function syncCompletion(task, date, note, photos = []) {
   if (!S.user || !task.dbId) return;
   setSyncing(true);
   try {
-    await sb.from('task_history').insert({ task_id: task.dbId, user_id: S.user.id, completed_date: date, note: note || '' });
+    await sb.from('task_history').insert({ task_id: task.dbId, user_id: S.user.id, completed_date: date, note: note || '', photos: photos });
     await sb.from('tasks').update({ due_date: task.dueDate }).eq('id', task.dbId);
   } catch(e) { console.error(e); }
   finally { setSyncing(false); }
@@ -1066,9 +1066,18 @@ function openDetail(id) {
   // Photos section (Pro only)
   let photosSection = '';
   if (S.tier === 'pro') {
-    photosSection = `<div style="margin-top:20px;"><div class="f-label">Photos & Receipts</div>
-      <div class="photo-area" onclick="document.getElementById('photoInput-${task.id}').click()">
-        <input type="file" id="photoInput-${task.id}" accept="image/*" multiple onchange="handlePhotos(${task.id}, this)">
+    // Gather all photos from history
+    const allPhotos = task.history.flatMap(h => (h.photos || []).map(url => ({ url, date: h.date })));
+    const thumbs = allPhotos.length ? `<div class="photo-preview">${allPhotos.map(p => `<div style="position:relative;"><img src="${p.url}" class="photo-thumb" onclick="window.open('${p.url}','_blank')" title="${p.date}"><div style="position:absolute;bottom:2px;left:2px;background:rgba(0,0,0,0.6);color:#fff;font-size:0.6rem;padding:1px 4px;border-radius:4px;">${p.date}</div></div>`).join('')}</div>` : '';
+    const idStr = String(task.id);
+    photosSection = `<div style="margin-top:20px;">
+      <div class="f-label" style="display:flex;justify-content:space-between;align-items:center;">
+        Photos & Receipts
+        <button onclick="exportPDF('${idStr}')" style="background:none;border:none;color:var(--green);font-family:'DM Sans',sans-serif;font-size:0.78rem;font-weight:600;cursor:pointer;">Export PDF →</button>
+      </div>
+      ${thumbs}
+      <div class="photo-area" onclick="document.getElementById('photoInput-${idStr}').click()" id="photoArea-${idStr}">
+        <input type="file" id="photoInput-${idStr}" accept="image/*,application/pdf" multiple onchange="handlePhotos('${idStr}', this)">
         <div style="font-size:1.5rem;margin-bottom:6px;">📷</div>
         <div style="font-size:0.82rem;color:var(--muted);">Tap to add photos or receipts</div>
       </div>
@@ -1088,20 +1097,106 @@ function openDetail(id) {
       ${task.note?`<div style="margin-top:10px;font-size:0.8rem;color:var(--muted);font-style:italic;">${task.note}</div>`:''}
     </div>
     <div style="padding:18px 22px;">
-      <button class="big-btn" onclick="completeTask(${task.id}); closeModal('detailModal'); renderApp();">✓ Mark as Done</button>
-      <button class="snooze-btn" onclick="snoozeTask(${task.id})">⏰ Snooze 1 week</button>
+      <button class="big-btn" onclick="completeTask('${String(task.id)}'); closeModal('detailModal'); renderApp();">✓ Mark as Done</button>
+      <button class="snooze-btn" onclick="snoozeTask('${String(task.id)}')">⏰ Snooze 1 week</button>
       <div style="margin-top:22px;"><div class="f-label">Completion History</div><div>${hist}</div></div>
       ${photosSection}
       <div style="margin-top:18px;">
-        <button onclick="deleteTask(${task.id})" style="width:100%;background:var(--red-light);color:var(--red);border:none;border-radius:10px;padding:11px;font-family:'DM Sans',sans-serif;font-size:0.83rem;font-weight:500;cursor:pointer;">Delete Task</button>
+        <button onclick="deleteTask('${String(task.id)}')" style="width:100%;background:var(--red-light);color:var(--red);border:none;border-radius:10px;padding:11px;font-family:'DM Sans',sans-serif;font-size:0.83rem;font-weight:500;cursor:pointer;">Delete Task</button>
       </div>
     </div>`;
   openModal('detailModal');
 }
 
-function handlePhotos(taskId, input) {
-  // In production this would upload to Supabase Storage
-  toast('Photos saved ✓');
+async function handlePhotos(taskId, input) {
+  if (!input.files || !input.files.length) return;
+  if (!S.user) return;
+  const sid = String(taskId);
+  const task = S.allTasks.find(t => String(t.id) === sid || String(t.dbId) === sid);
+  if (!task) return;
+
+  const area = document.getElementById('photoArea-' + sid);
+  if (area) area.innerHTML = '<div style="padding:12px;text-align:center;color:var(--muted);font-size:0.85rem;">Uploading...</div>';
+
+  const uploaded = [];
+  for (const file of input.files) {
+    try {
+      const ext = file.name.split('.').pop();
+      const path = `${S.user.id}/${sid}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+      const { error } = await sb.storage.from('task-photos').upload(path, file, { upsert: false });
+      if (error) throw error;
+      const { data: urlData } = sb.storage.from('task-photos').getPublicUrl(path);
+      // Use signed URL instead since bucket is private
+      const { data: signed } = await sb.storage.from('task-photos').createSignedUrl(path, 60 * 60 * 24 * 365);
+      if (signed?.signedUrl) uploaded.push(signed.signedUrl);
+    } catch (e) {
+      console.error('Upload error:', e);
+      toast('Upload failed: ' + e.message);
+    }
+  }
+
+  if (uploaded.length) {
+    // Add to latest history entry or create one
+    const date = new Date().toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+    if (task.history.length && task.history[0].date === date) {
+      task.history[0].photos = [...(task.history[0].photos || []), ...uploaded];
+    } else {
+      task.history.unshift({ date, note: '', photos: uploaded });
+    }
+    await syncCompletion(task, date, '', uploaded);
+    toast(`${uploaded.length} photo${uploaded.length>1?'s':''} saved ✓`);
+    openDetail(sid); // refresh the modal
+  }
+}
+
+async function exportPDF(taskId) {
+  const sid = String(taskId);
+  const task = S.allTasks.find(t => String(t.id) === sid || String(t.dbId) === sid);
+  if (!task) return;
+  toast('Generating PDF...');
+
+  // Build HTML content for PDF
+  const histRows = task.history.map(h => {
+    const photos = (h.photos || []).map(url => `<img src="${url}" style="width:80px;height:80px;object-fit:cover;border-radius:6px;margin:2px;">`).join('');
+    return `<tr style="border-bottom:1px solid #eee;">
+      <td style="padding:8px;font-size:13px;">${h.date}</td>
+      <td style="padding:8px;font-size:13px;">${h.note || '—'}</td>
+      <td style="padding:8px;">${photos || '—'}</td>
+    </tr>`;
+  }).join('');
+
+  const html = `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>${task.name} — Maintenance Record</title>
+<style>
+  body { font-family: -apple-system, sans-serif; padding: 40px; color: #1a1a1a; }
+  h1 { font-size: 22px; margin-bottom: 4px; }
+  .meta { color: #666; font-size: 13px; margin-bottom: 24px; }
+  table { width: 100%; border-collapse: collapse; }
+  th { text-align: left; padding: 8px; background: #f5f5f5; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .footer { margin-top: 32px; font-size: 11px; color: #999; }
+</style>
+</head>
+<body>
+  <h1>${task.name}</h1>
+  <div class="meta">Category: ${task.category} &nbsp;|&nbsp; Every ${task.frequencyDays} days &nbsp;|&nbsp; Generated: ${new Date().toLocaleDateString()}</div>
+  ${task.note ? `<p style="font-size:13px;color:#555;margin-bottom:20px;font-style:italic;">${task.note}</p>` : ''}
+  <table>
+    <thead><tr><th>Date</th><th>Notes</th><th>Photos</th></tr></thead>
+    <tbody>${histRows || '<tr><td colspan="3" style="padding:12px;color:#999;">No history yet.</td></tr>'}</tbody>
+  </table>
+  <div class="footer">Generated by Tended &mdash; usetended.com</div>
+</body>
+</html>`;
+
+  const blob = new Blob([html], { type: 'text/html' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${task.name.replace(/[^a-z0-9]/gi,'_')}_maintenance_record.html`;
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('PDF downloaded ✓');
 }
 
 // ── UPGRADE ──
