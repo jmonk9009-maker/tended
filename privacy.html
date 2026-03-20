@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Privacy Policy — Tended</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap');
+:root {
+  --green: #2d5a3d; --green-light: #eef4f0; --ink: #1a1710;
+  --muted: #7a7060; --border: #e0d8cc; --bg: #f8f5ef; --white: #ffffff;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--ink); font-family: 'DM Sans', sans-serif; line-height: 1.7; }
+nav { background: rgba(248,245,239,0.95); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 10; }
+.nav-logo { font-family: 'Lora', serif; font-size: 1.2rem; font-weight: 600; color: var(--green); text-decoration: none; }
+.nav-link { font-size: 0.82rem; color: var(--muted); text-decoration: none; }
+.nav-link:hover { color: var(--green); }
+.container { max-width: 720px; margin: 0 auto; padding: 60px 24px 100px; }
+.doc-label { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--green); margin-bottom: 12px; }
+h1 { font-family: 'Lora', serif; font-size: 2.2rem; font-weight: 600; line-height: 1.2; margin-bottom: 8px; }
+.doc-meta { font-size: 0.82rem; color: var(--muted); margin-bottom: 48px; padding-bottom: 24px; border-bottom: 1px solid var(--border); }
+h2 { font-family: 'Lora', serif; font-size: 1.15rem; font-weight: 600; margin: 40px 0 12px; color: var(--ink); }
+p { font-size: 0.92rem; color: #3a3530; margin-bottom: 14px; }
+ul { margin: 0 0 14px 20px; }
+li { font-size: 0.92rem; color: #3a3530; margin-bottom: 6px; }
+.highlight { background: var(--green-light); border-left: 3px solid var(--green); border-radius: 0 8px 8px 0; padding: 14px 18px; margin: 20px 0; font-size: 0.88rem; }
+.data-table { width: 100%; border-collapse: collapse; margin: 16px 0 24px; font-size: 0.85rem; }
+.data-table th { text-align: left; padding: 10px 14px; background: var(--green-light); color: var(--green); font-weight: 600; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.05em; }
+.data-table td { padding: 10px 14px; border-bottom: 1px solid var(--border); vertical-align: top; }
+a { color: var(--green); }
+footer { text-align: center; padding: 32px; font-size: 0.78rem; color: var(--muted); border-top: 1px solid var(--border); }
+</style>
+</head>
+<body>
+<nav>
+  <a href="/" class="nav-logo">tended</a>
+  <a href="/terms" class="nav-link">Terms of Service →</a>
+</nav>
+<div class="container">
+  <div class="doc-label">Legal</div>
+  <h1>Privacy Policy</h1>
+  <div class="doc-meta">Last updated: March 20, 2026 &nbsp;·&nbsp; Effective: March 20, 2026</div>
+
+  <div class="highlight"><strong>The short version:</strong> We collect only what we need to run the app. We do not sell your personal data to third parties. Ever.</div>
+
+  <h2>1. Who We Are</h2>
+  <p>Tended ("we," "us," or "our") operates the Tended maintenance tracking application at usetended.com. If you have questions about this policy, contact us at <a href="mailto:support@usetended.com">support@usetended.com</a>.</p>
+
+  <h2>2. Information We Collect</h2>
+  <table class="data-table">
+    <thead><tr><th>What</th><th>Why</th><th>How long</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Email address</strong></td><td>Account creation and login</td><td>Until account deleted</td></tr>
+      <tr><td><strong>Home profile</strong> (type, HVAC, year built)</td><td>Generate your AI schedule</td><td>Until account deleted</td></tr>
+      <tr><td><strong>Task data</strong> (names, due dates, history)</td><td>Core app functionality</td><td>Until account deleted</td></tr>
+      <tr><td><strong>Photos & receipts</strong></td><td>Maintenance records (Pro)</td><td>Until deleted by you</td></tr>
+      <tr><td><strong>Push notification token</strong></td><td>Send task reminders</td><td>Until notifications disabled</td></tr>
+      <tr><td><strong>Payment info</strong></td><td>Subscription billing (via Stripe)</td><td>Managed by Stripe</td></tr>
+      <tr><td><strong>Usage data</strong> (app interactions)</td><td>Improve the service</td><td>90 days rolling</td></tr>
+    </tbody>
+  </table>
+  <p>We do not collect your precise location, contacts, or any data unrelated to the maintenance tracking features.</p>
+
+  <h2>3. How We Use Your Information</h2>
+  <ul>
+    <li>To provide, operate, and improve the Tended service</li>
+    <li>To generate your AI-personalized maintenance schedule</li>
+    <li>To send task reminders via push notifications (only when you have tasks due)</li>
+    <li>To process subscription payments through Stripe</li>
+    <li>To respond to your support requests</li>
+    <li>To detect and prevent fraud or abuse</li>
+  </ul>
+  <p>We do not use your data to train AI models or sell advertising.</p>
+
+  <h2>4. Data Sharing</h2>
+  <p>We do not sell, rent, or trade your personal data. We share data only with:</p>
+  <ul>
+    <li><strong>Supabase</strong> — our database and authentication provider. Data is stored in US-East data centers.</li>
+    <li><strong>Stripe</strong> — our payment processor. We never store your full card details.</li>
+    <li><strong>Anthropic</strong> — our AI provider. Your home profile is sent to generate your schedule. No personally identifiable information is included beyond home characteristics.</li>
+    <li><strong>Law enforcement</strong> — only when required by valid legal process.</li>
+  </ul>
+
+  <h2>5. Shareable Records</h2>
+  <p>If you generate a shareable maintenance record link (Tended Pro), that link is publicly accessible to anyone who has it. Shared records include your task history and any photos you have uploaded. Links expire after 30 days. You can revoke access at any time from your profile.</p>
+  <p>We are not responsible for how recipients use or share your maintenance record after you share the link.</p>
+
+  <h2>6. Push Notifications</h2>
+  <p>If you enable push notifications, we store your browser's push subscription token to send you task reminders. We send notifications only when you have tasks due or overdue. You can disable notifications at any time from your profile or browser settings.</p>
+
+  <h2>7. Data Security</h2>
+  <p>We take reasonable measures to protect your data, including:</p>
+  <ul>
+    <li>Encryption in transit (HTTPS/TLS) and at rest</li>
+    <li>Row-level security on all database tables</li>
+    <li>Private storage buckets for photos</li>
+    <li>No storage of plaintext passwords (handled by Supabase Auth)</li>
+  </ul>
+  <p>No system is 100% secure. If you become aware of a security issue, please contact us immediately at <a href="mailto:support@usetended.com">support@usetended.com</a>.</p>
+
+  <h2>8. Data Retention</h2>
+  <p>We retain your data for as long as your account is active. If you delete your account, we delete your personal data within 30 days, except where retention is required by law.</p>
+
+  <h2>9. Your Rights</h2>
+  <p>Depending on your location, you may have the following rights:</p>
+  <ul>
+    <li><strong>Access:</strong> Request a copy of the data we hold about you</li>
+    <li><strong>Correction:</strong> Request correction of inaccurate data</li>
+    <li><strong>Deletion:</strong> Request deletion of your account and data</li>
+    <li><strong>Portability:</strong> Request your data in a machine-readable format</li>
+    <li><strong>Opt-out:</strong> Disable push notifications or delete your account at any time</li>
+  </ul>
+  <p>To exercise these rights, contact us at <a href="mailto:support@usetended.com">support@usetended.com</a> or use the delete account option in your profile settings.</p>
+
+  <h2>10. California Privacy Rights (CCPA)</h2>
+  <p>California residents have specific rights under the California Consumer Privacy Act. We do not sell personal information as defined by the CCPA. California residents may request disclosure of the categories of personal information collected and the purposes for which it is used. Contact us at <a href="mailto:support@usetended.com">support@usetended.com</a> to make a request.</p>
+
+  <h2>11. Children's Privacy</h2>
+  <p>Tended is not directed at children under 13. We do not knowingly collect personal information from children under 13. If you believe a child has provided us with personal information, contact us immediately.</p>
+
+  <h2>12. Third-Party Links</h2>
+  <p>The app may contain links to third-party services (such as YouTube tutorials or contractor directories). We are not responsible for the privacy practices of those services.</p>
+
+  <h2>13. Changes to This Policy</h2>
+  <p>We may update this policy from time to time. We will notify you of material changes via email or in-app notification at least 14 days before they take effect. Your continued use after changes constitutes acceptance.</p>
+
+  <h2>14. Contact Us</h2>
+  <p>For privacy questions or to exercise your rights:<br>
+  <strong>Tended</strong><br>
+  Email: <a href="mailto:support@usetended.com">support@usetended.com</a><br>
+  Website: <a href="https://usetended.com">usetended.com</a></p>
+</div>
+<footer>© 2026 Tended · <a href="/terms" style="color:var(--muted);">Terms of Service</a> · <a href="/" style="color:var(--muted);">Home</a></footer>
+</body>
+</html>
