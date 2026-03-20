@@ -151,6 +151,9 @@ body {
 .app-top { display: flex; align-items: center; justify-content: space-between; padding-bottom: 16px; }
 .app-logo { font-family: 'Lora', serif; font-size: 1.4rem; font-weight: 600; color: var(--green); letter-spacing: -0.02em; }
 .app-logo span { font-style: italic; font-weight: 400; }
+.menu-item { width:100%;background:none;border:none;padding:13px 24px;font-family:'DM Sans',sans-serif;font-size:0.92rem;font-weight:500;color:var(--text);cursor:pointer;text-align:left;display:flex;align-items:center;gap:12px;transition:background 0.1s; }
+.menu-item:hover { background:var(--surface2); }
+.menu-icon { width:20px;text-align:center;font-size:1rem; }
 .hdr-btns { display: flex; gap: 8px; align-items: center; }
 .icon-btn { width: 36px; height: 36px; background: var(--surface2); border: none; border-radius: 9px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.95rem; transition: all 0.15s; }
 .icon-btn:hover { background: var(--border); }
@@ -458,7 +461,7 @@ body {
       <div class="app-logo">ten<span>ded</span></div>
       <div class="hdr-btns">
         <div id="syncInd"><span class="sync-dot"></span></div>
-        <button class="icon-btn" onclick="openProfile()" title="Profile">👤</button>
+        <button class="icon-btn" onclick="openMenu()" title="Menu" style="font-size:1.1rem;line-height:1;">☰</button>
       </div>
     </div>
     <div class="nav-tabs">
@@ -469,6 +472,41 @@ body {
   </div>
   <div class="app-body" id="appBody"></div>
   <button class="fab" onclick="openAddTask()">+</button>
+</div>
+
+<!-- SLIDE-OUT MENU -->
+<div id="menuOverlay" onclick="closeMenu()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:300;"></div>
+<div id="sideMenu" style="display:none;position:fixed;top:0;right:0;bottom:0;width:280px;background:var(--surface);z-index:301;flex-direction:column;box-shadow:-4px 0 24px rgba(0,0,0,0.15);overflow-y:auto;">
+  <div style="padding:56px 24px 20px;border-bottom:1px solid var(--border);">
+    <div style="font-family:'Lora',serif;font-size:1.3rem;font-weight:600;color:var(--green);">ten<span style="font-style:italic;font-weight:400;">ded</span></div>
+    <div style="font-size:0.78rem;color:var(--muted);margin-top:4px;" id="menuUserEmail"></div>
+  </div>
+  <div style="flex:1;padding:16px 0;">
+    <button onclick="switchTab('dash',null);closeMenu();" class="menu-item">
+      <span class="menu-icon">🏠</span> Dashboard
+    </button>
+    <button onclick="switchTab('cats',null);closeMenu();" class="menu-item">
+      <span class="menu-icon">📋</span> Categories
+    </button>
+    <button onclick="switchTab('hist',null);closeMenu();" class="menu-item">
+      <span class="menu-icon">📅</span> History
+    </button>
+    <div style="height:1px;background:var(--border);margin:8px 16px;"></div>
+    <button onclick="openAddTask();closeMenu();" class="menu-item">
+      <span class="menu-icon">+</span> Add Task
+    </button>
+    <button onclick="openProfile();closeMenu();" class="menu-item">
+      <span class="menu-icon">👤</span> Profile & Settings
+    </button>
+    <div id="menuUpgradeBtn"></div>
+    <div style="height:1px;background:var(--border);margin:8px 16px;"></div>
+    <button onclick="closeMenu();doSignOut();" class="menu-item" style="color:var(--muted);">
+      <span class="menu-icon">→</span> Sign Out
+    </button>
+  </div>
+  <div style="padding:16px 24px;border-top:1px solid var(--border);">
+    <div style="font-size:0.7rem;color:var(--muted);">Version 1.0 · <a href="/" style="color:var(--muted);">usetended.com</a></div>
+  </div>
 </div>
 
 <!-- ADD TASK MODAL -->
@@ -1706,6 +1744,46 @@ async function cancelSubscription() {
   } catch(e) { toast('Could not cancel. Please try again.'); }
 }
 
+
+// ── MENU ──
+function openMenu() {
+  const overlay = document.getElementById('menuOverlay');
+  const menu = document.getElementById('sideMenu');
+  const emailEl = document.getElementById('menuUserEmail');
+  if (emailEl && S.user) emailEl.textContent = S.user.email;
+
+  // Show upgrade button if not Pro
+  const upgradeBtn = document.getElementById('menuUpgradeBtn');
+  if (upgradeBtn) {
+    if (S.tier !== 'pro') {
+      upgradeBtn.innerHTML = `<button onclick="openUpgrade();closeMenu();" class="menu-item" style="color:var(--green);font-weight:600;">
+        <span class="menu-icon">⭐</span> Upgrade to Pro
+      </button>`;
+    } else {
+      upgradeBtn.innerHTML = `<div style="padding:8px 24px;font-size:0.72rem;color:var(--green);font-weight:600;">✓ Tended Pro</div>`;
+    }
+  }
+
+  overlay.style.display = 'block';
+  menu.style.display = 'flex';
+  requestAnimationFrame(() => {
+    menu.style.transform = 'translateX(0)';
+    menu.style.transition = 'transform 0.25s ease';
+  });
+}
+
+function closeMenu() {
+  const overlay = document.getElementById('menuOverlay');
+  const menu = document.getElementById('sideMenu');
+  menu.style.transform = 'translateX(100%)';
+  setTimeout(() => {
+    overlay.style.display = 'none';
+    menu.style.display = 'none';
+    menu.style.transform = '';
+    menu.style.transition = '';
+  }, 250);
+}
+
 // ── PROFILE ──
 function openProfile() {
   const tierLabel = S.tier === 'pro' ? 'Tended Pro' : S.tier === 'home' ? 'Tended' : 'Starter (Free)';
@@ -1847,7 +1925,14 @@ document.querySelectorAll('.overlay').forEach(o => {
 function switchTab(tab, btn) {
   S.tab = tab;
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-  btn.classList.add('active');
+  if (btn) {
+    btn.classList.add('active');
+  } else {
+    // Called from menu — highlight matching tab
+    const tabs = { dash: 0, cats: 1, hist: 2 };
+    const allTabs = document.querySelectorAll('.nav-tab');
+    if (allTabs[tabs[tab]]) allTabs[tabs[tab]].classList.add('active');
+  }
   renderApp();
 }
 
