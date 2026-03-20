@@ -102,6 +102,33 @@ body {
 .setup-sub { font-size: 0.86rem; color: rgba(255,255,255,0.68); margin-top: 8px; line-height: 1.5; }
 .setup-body { padding: 26px 28px; flex: 1; overflow-y: auto; }
 .setup-foot { padding: 16px 28px 36px; }
+
+/* ── CONVERSATIONAL ONBOARDING ── */
+.ob-step { flex:1; display:flex; flex-direction:column; padding:60px 24px 32px; animation: obIn 0.35s ease; }
+@keyframes obIn { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
+.ob-label { font-size:0.72rem; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--green); margin-bottom:10px; }
+.ob-q { font-family:'Lora',serif; font-size:1.6rem; font-weight:600; line-height:1.25; margin-bottom:8px; }
+.ob-q em { font-style:italic; color:var(--green); }
+.ob-sub { font-size:0.85rem; color:var(--muted); margin-bottom:28px; line-height:1.5; }
+.ob-options { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:20px; }
+.ob-options.three { grid-template-columns:1fr 1fr 1fr; }
+.ob-options.one { grid-template-columns:1fr; }
+.ob-opt { background:var(--surface); border:2px solid var(--border); border-radius:14px; padding:16px 12px; text-align:center; cursor:pointer; transition:all 0.15s; }
+.ob-opt:active { transform:scale(0.97); }
+.ob-opt.sel { border-color:var(--green); background:var(--green-light); }
+.ob-opt .oi { font-size:1.6rem; margin-bottom:6px; }
+.ob-opt .ol { font-size:0.8rem; font-weight:600; }
+.ob-opt .od { font-size:0.7rem; color:var(--muted); margin-top:2px; }
+.ob-input { width:100%; background:var(--surface); border:2px solid var(--border); border-radius:12px; padding:14px 16px; font-family:'DM Sans',sans-serif; font-size:0.95rem; color:var(--text); outline:none; margin-bottom:16px; transition:border-color 0.15s; }
+.ob-input:focus { border-color:var(--green); }
+.ob-photo-area { border:2px dashed var(--border); border-radius:14px; padding:28px; text-align:center; cursor:pointer; transition:all 0.15s; margin-bottom:16px; position:relative; overflow:hidden; }
+.ob-photo-area:hover { border-color:var(--green); background:var(--green-light); }
+.ob-photo-preview { width:100%; height:180px; object-fit:cover; border-radius:12px; margin-bottom:12px; }
+.ob-footer { margin-top:auto; display:grid; gap:10px; padding-top:20px; }
+.ob-next { background:var(--green); color:#fff; border:none; border-radius:14px; padding:16px; font-family:'DM Sans',sans-serif; font-size:0.95rem; font-weight:600; cursor:pointer; transition:all 0.15s; }
+.ob-next:disabled { background:var(--border); color:var(--muted); cursor:not-allowed; }
+.ob-skip { background:none; border:none; color:var(--muted); font-family:'DM Sans',sans-serif; font-size:0.85rem; cursor:pointer; padding:8px; }
+.ob-back-btn { background:none; border:none; color:var(--muted); font-family:'DM Sans',sans-serif; font-size:0.85rem; cursor:pointer; padding:12px 0; text-align:left; }
 .opt-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .opt-grid.three { grid-template-columns: 1fr 1fr 1fr; }
 .opt-btn { background: var(--surface); border: 2px solid var(--border); border-radius: 10px; padding: 14px 10px; cursor: pointer; text-align: center; transition: all 0.15s; font-family: 'DM Sans', sans-serif; }
@@ -343,46 +370,15 @@ body {
   </div>
 </div>
 
-<!-- SETUP -->
-<div id="screen-setup" class="screen">
-  <div class="setup-top">
-    <button class="back-pill" onclick="show('screen-auth')">← Back</button>
-    <div class="setup-h">Tell us about<br><em>your home</em></div>
-    <div class="setup-sub">Our AI builds a personalized schedule just for you.</div>
+<!-- CONVERSATIONAL ONBOARDING -->
+<div id="screen-setup" class="screen" style="background:var(--bg);">
+  <!-- Progress bar -->
+  <div style="position:fixed;top:0;left:0;right:0;z-index:50;height:3px;background:var(--border);">
+    <div id="obProgress" style="height:100%;background:var(--green);transition:width 0.4s ease;width:0%;"></div>
   </div>
-  <div class="setup-body">
-    <div class="grp">
-      <label class="f-label">Home Type</label>
-      <div class="opt-grid">
-        <div class="opt-btn" data-g="type" data-v="house" onclick="pick(this)"><div class="oi">🏠</div><div class="ol">House</div></div>
-        <div class="opt-btn" data-g="type" data-v="condo" onclick="pick(this)"><div class="oi">🏢</div><div class="ol">Condo</div></div>
-        <div class="opt-btn" data-g="type" data-v="townhouse" onclick="pick(this)"><div class="oi">🏘</div><div class="ol">Townhouse</div></div>
-        <div class="opt-btn" data-g="type" data-v="apartment" onclick="pick(this)"><div class="oi">🏗</div><div class="ol">Apartment</div></div>
-      </div>
-    </div>
-    <div class="grp">
-      <label class="f-label">Heating & Cooling</label>
-      <div class="opt-grid three">
-        <div class="opt-btn" data-g="hvac" data-v="central" onclick="pick(this)"><div class="oi">🌀</div><div class="ol">Central</div></div>
-        <div class="opt-btn" data-g="hvac" data-v="heat-pump" onclick="pick(this)"><div class="oi">♨️</div><div class="ol">Heat Pump</div></div>
-        <div class="opt-btn" data-g="hvac" data-v="boiler" onclick="pick(this)"><div class="oi">🔥</div><div class="ol">Boiler</div></div>
-      </div>
-    </div>
-    <div class="grp">
-      <label class="f-label">Year Built <span style="font-weight:400;text-transform:none;letter-spacing:0;">(optional)</span></label>
-      <input type="number" class="f-input" id="yearBuilt" placeholder="e.g. 1995" min="1800" max="2026">
-    </div>
-    <div class="grp">
-      <label class="f-label">Ownership</label>
-      <div class="opt-grid">
-        <div class="opt-btn" data-g="own" data-v="own" onclick="pick(this)"><div class="oi">🔑</div><div class="ol">I own it</div></div>
-        <div class="opt-btn" data-g="own" data-v="rent" onclick="pick(this)"><div class="oi">📋</div><div class="ol">I rent it</div></div>
-      </div>
-    </div>
-  </div>
-  <div class="setup-foot">
-    <button class="btn btn-green" id="setupBtn" onclick="runAI()" disabled>✨ Generate My Schedule</button>
-  </div>
+
+  <!-- Step container -->
+  <div id="obContainer" style="flex:1;display:flex;flex-direction:column;min-height:100vh;"></div>
 </div>
 
 <!-- AI LOADING -->
@@ -804,7 +800,7 @@ async function loadData() {
   setSyncing(true);
   try {
     const { data: profile } = await sb.from('home_profiles').select('*').eq('user_id', S.user.id).single();
-    if (profile) S.profile = { type: profile.home_type, hvac: profile.hvac, yearBuilt: profile.year_built, own: profile.ownership };
+    if (profile) S.profile = { type: profile.home_type, hvac: profile.hvac, yearBuilt: profile.year_built, own: profile.ownership, address: profile.address, photoUrl: profile.photo_url, vehicles: profile.vehicles||[], pets: profile.pets||[] };
 
     const { data: tasks } = await sb.from('tasks').select('*').eq('user_id', S.user.id).order('due_date');
     const { data: history } = await sb.from('task_history').select('*').eq('user_id', S.user.id).order('created_at', { ascending: false });
@@ -826,7 +822,7 @@ async function loadData() {
     S.tier = user?.user_metadata?.tier || 'free';
 
     if (!profile && S.allTasks.length === 0) {
-      show('screen-setup'); return true;
+      initOnboarding(); return true;
     }
     return false;
   } catch(e) { console.error(e); return false; }
@@ -913,20 +909,534 @@ function show(id) {
   }
 }
 
+// ── CONVERSATIONAL ONBOARDING ──
+
+// Data store for onboarding
+const OB = {
+  step: 0,
+  home: {},
+  vehicles: [],
+  pets: [],
+  currentVehicle: {},
+  currentPet: {},
+  addingVehicle: false,
+  addingPet: false,
+};
+
+const HOME_TYPES = [
+  { v:'house', icon:'🏠', label:'House' },
+  { v:'condo', icon:'🏢', label:'Condo' },
+  { v:'townhouse', icon:'🏘', label:'Townhouse' },
+  { v:'apartment', icon:'🏗', label:'Apartment' },
+  { v:'mobile-home', icon:'🚐', label:'Mobile Home' },
+  { v:'tiny-home', icon:'🏡', label:'Tiny Home' },
+  { v:'duplex', icon:'🏠', label:'Duplex' },
+  { v:'farmhouse', icon:'🌾', label:'Farmhouse' },
+];
+
+const HVAC_TYPES = [
+  { v:'central', icon:'🌀', label:'Central AC/Heat' },
+  { v:'heat-pump', icon:'♨️', label:'Heat Pump' },
+  { v:'boiler', icon:'🔥', label:'Boiler' },
+  { v:'window-units', icon:'🪟', label:'Window Units' },
+  { v:'mini-split', icon:'❄️', label:'Mini Split' },
+  { v:'none', icon:'🌬️', label:'None' },
+];
+
+const CAR_MAKES = ['Acura','Alfa Romeo','Aston Martin','Audi','Bentley','BMW','Buick','Cadillac','Chevrolet','Chrysler','Dodge','Ferrari','Fiat','Ford','Genesis','GMC','Honda','Hyundai','Infiniti','Jaguar','Jeep','Kia','Lamborghini','Land Rover','Lexus','Lincoln','Maserati','Mazda','Mercedes-Benz','Mini','Mitsubishi','Nissan','Porsche','Ram','Rivian','Rolls-Royce','Subaru','Tesla','Toyota','Volkswagen','Volvo','Other'];
+
+const PET_TYPES = [
+  { v:'dog', icon:'🐕', label:'Dog' },
+  { v:'cat', icon:'🐈', label:'Cat' },
+  { v:'bird', icon:'🐦', label:'Bird' },
+  { v:'fish', icon:'🐠', label:'Fish' },
+  { v:'rabbit', icon:'🐇', label:'Rabbit' },
+  { v:'reptile', icon:'🦎', label:'Reptile' },
+  { v:'hamster', icon:'🐹', label:'Hamster' },
+  { v:'other', icon:'🐾', label:'Other' },
+];
+
+const DOG_BREEDS = ['Labrador Retriever','German Shepherd','Golden Retriever','French Bulldog','Bulldog','Poodle','Beagle','Rottweiler','Dachshund','Siberian Husky','Great Dane','Doberman','Shih Tzu','Boxer','Yorkshire Terrier','Chihuahua','Pomeranian','Australian Shepherd','Border Collie','Cocker Spaniel','Maltese','Pit Bull','Bernese Mountain Dog','Saint Bernard','Mixed Breed','Other'];
+
+const CAT_BREEDS = ['Domestic Shorthair','Domestic Longhair','Siamese','Persian','Maine Coon','Ragdoll','Bengal','British Shorthair','Scottish Fold','Sphynx','Russian Blue','Abyssinian','American Shorthair','Norwegian Forest Cat','Birman','Mixed Breed','Other'];
+
+// Steps definition
+const OB_STEPS = [
+  'welcome',
+  'home_type', 'home_address', 'home_photo', 'home_hvac', 'home_year', 'home_own',
+  'vehicle_ask', 'vehicle_make', 'vehicle_model', 'vehicle_year', 'vehicle_photo',
+  'pet_ask', 'pet_type', 'pet_name', 'pet_breed', 'pet_photo',
+  'summary',
+];
+
+function initOnboarding() {
+  OB.step = 0;
+  OB.home = {};
+  OB.vehicles = [];
+  OB.pets = [];
+  renderOBStep();
+  show('screen-setup');
+}
+
+function renderOBStep() {
+  const stepName = OB_STEPS[OB.step];
+  const pct = Math.round((OB.step / (OB_STEPS.length - 1)) * 100);
+  document.getElementById('obProgress').style.width = pct + '%';
+  const container = document.getElementById('obContainer');
+  container.innerHTML = buildStep(stepName);
+}
+
+function obNext() {
+  if (OB.step < OB_STEPS.length - 1) {
+    OB.step++;
+    renderOBStep();
+  }
+}
+
+function obBack() {
+  if (OB.step > 0) {
+    OB.step--;
+    renderOBStep();
+  }
+}
+
+function obSkip() { obNext(); }
+
+function buildStep(name) {
+  const backBtn = OB.step > 0 ? `<button class="ob-back-btn" onclick="obBack()">← Back</button>` : '';
+
+  switch(name) {
+    case 'welcome':
+      return `<div class="ob-step">
+        <div style="flex:1;display:flex;flex-direction:column;justify-content:center;text-align:center;padding:20px 0;">
+          <div style="font-size:3rem;margin-bottom:20px;">🏠</div>
+          <div class="ob-label">Welcome to Tended</div>
+          <div class="ob-q">Let's build your <em>personal</em> maintenance plan</div>
+          <div class="ob-sub" style="text-align:center;">We'll ask a few questions about your home, vehicles, and pets. Takes about 2 minutes.</div>
+        </div>
+        <div class="ob-footer">
+          <button class="ob-next" onclick="obNext()">Let's get started →</button>
+        </div>
+      </div>`;
+
+    case 'home_type':
+      return `<div class="ob-step">
+        ${backBtn}
+        <div class="ob-label">Your Home</div>
+        <div class="ob-q">What type of <em>home</em> do you live in?</div>
+        <div class="ob-options" style="grid-template-columns:1fr 1fr;">
+          ${HOME_TYPES.map(t => `<div class="ob-opt ${OB.home.type===t.v?'sel':''}" onclick="obSelect('home','type','${t.v}',this)"><div class="oi">${t.icon}</div><div class="ol">${t.label}</div></div>`).join('')}
+        </div>
+        <div class="ob-footer">
+          <button class="ob-next" id="obNextBtn" onclick="obNext()" ${!OB.home.type?'disabled':''}>Continue →</button>
+        </div>
+      </div>`;
+
+    case 'home_address':
+      return `<div class="ob-step">
+        ${backBtn}
+        <div class="ob-label">Your Home</div>
+        <div class="ob-q">What's your <em>home address?</em></div>
+        <div class="ob-sub">We'll show a photo of your home. Your address is stored privately and never shared.</div>
+        <input class="ob-input" id="obAddress" placeholder="123 Main St, City, State" value="${OB.home.address||''}" oninput="OB.home.address=this.value">
+        <div id="streetViewContainer" style="display:none;">
+          <img id="streetViewImg" class="ob-photo-preview" style="display:block;" src="">
+          <div style="font-size:0.72rem;color:var(--muted);text-align:center;margin-top:-8px;margin-bottom:12px;">📍 Street view of your home</div>
+        </div>
+        <div class="ob-footer">
+          <button class="ob-next" onclick="loadStreetView()">Show my home →</button>
+          <button class="ob-skip" onclick="obNext()">Skip</button>
+        </div>
+      </div>`;
+
+    case 'home_photo':
+      return `<div class="ob-step">
+        ${backBtn}
+        <div class="ob-label">Your Home</div>
+        <div class="ob-q">Add a photo of <em>your home</em></div>
+        <div class="ob-sub">Optional — helps personalize your experience.</div>
+        ${OB.home.photoUrl ? `<img src="${OB.home.photoUrl}" class="ob-photo-preview" style="display:block;">` : ''}
+        <div class="ob-photo-area" onclick="document.getElementById('homePhotoInput').click()">
+          <input type="file" id="homePhotoInput" accept="image/*" style="display:none" onchange="handleObPhoto('home',this)">
+          <div style="font-size:2rem;margin-bottom:8px;">📷</div>
+          <div style="font-size:0.85rem;color:var(--muted);">${OB.home.photoUrl ? 'Tap to change photo' : 'Tap to add a photo'}</div>
+        </div>
+        <div class="ob-footer">
+          <button class="ob-next" onclick="obNext()">${OB.home.photoUrl ? 'Continue →' : 'Skip for now'}</button>
+        </div>
+      </div>`;
+
+    case 'home_hvac':
+      return `<div class="ob-step">
+        ${backBtn}
+        <div class="ob-label">Your Home</div>
+        <div class="ob-q">How do you <em>heat & cool</em> your home?</div>
+        <div class="ob-options" style="grid-template-columns:1fr 1fr;">
+          ${HVAC_TYPES.map(t => `<div class="ob-opt ${OB.home.hvac===t.v?'sel':''}" onclick="obSelect('home','hvac','${t.v}',this)"><div class="oi">${t.icon}</div><div class="ol">${t.label}</div></div>`).join('')}
+        </div>
+        <div class="ob-footer">
+          <button class="ob-next" onclick="obNext()" ${!OB.home.hvac?'disabled':''}>Continue →</button>
+        </div>
+      </div>`;
+
+    case 'home_year':
+      return `<div class="ob-step">
+        ${backBtn}
+        <div class="ob-label">Your Home</div>
+        <div class="ob-q">When was your home <em>built?</em></div>
+        <div class="ob-sub">Older homes often need different maintenance. Even an estimate helps.</div>
+        <input class="ob-input" id="obYear" type="number" placeholder="e.g. 1995" min="1800" max="2026" value="${OB.home.yearBuilt||''}" oninput="OB.home.yearBuilt=this.value">
+        <div class="ob-footer">
+          <button class="ob-next" onclick="obNext()">Continue →</button>
+          <button class="ob-skip" onclick="obNext()">I don't know</button>
+        </div>
+      </div>`;
+
+    case 'home_own':
+      return `<div class="ob-step">
+        ${backBtn}
+        <div class="ob-label">Your Home</div>
+        <div class="ob-q">Do you <em>own or rent</em> your home?</div>
+        <div class="ob-options" style="grid-template-columns:1fr 1fr;">
+          <div class="ob-opt ${OB.home.own==='own'?'sel':''}" onclick="obSelect('home','own','own',this);setTimeout(obNext,300)"><div class="oi">🔑</div><div class="ol">I own it</div></div>
+          <div class="ob-opt ${OB.home.own==='rent'?'sel':''}" onclick="obSelect('home','own','rent',this);setTimeout(obNext,300)"><div class="oi">📋</div><div class="ol">I rent it</div></div>
+        </div>
+        <div class="ob-footer">
+          <button class="ob-next" onclick="obNext()" ${!OB.home.own?'disabled':''}>Continue →</button>
+        </div>
+      </div>`;
+
+    case 'vehicle_ask':
+      return `<div class="ob-step">
+        ${backBtn}
+        <div class="ob-label">Vehicles</div>
+        <div class="ob-q">Do you have a <em>vehicle</em> to track?</div>
+        <div class="ob-sub">We'll add maintenance reminders for oil changes, tire rotations, and more.</div>
+        ${OB.vehicles.length ? `<div style="margin-bottom:16px;">${OB.vehicles.map((v,i) => `<div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 16px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;"><span>🚗 ${v.year} ${v.make} ${v.model||''}</span><button onclick="OB.vehicles.splice(${i},1);renderOBStep()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:0.8rem;">✕</button></div>`).join('')}</div>` : ''}
+        <div class="ob-options" style="grid-template-columns:1fr 1fr;">
+          <div class="ob-opt" onclick="OB.step=OB_STEPS.indexOf('vehicle_make');renderOBStep()"><div class="oi">🚗</div><div class="ol">${OB.vehicles.length ? 'Add another' : 'Yes, add vehicle'}</div></div>
+          <div class="ob-opt" onclick="obNext()"><div class="oi">${OB.vehicles.length ? '✓' : '⏭'}</div><div class="ol">${OB.vehicles.length ? 'Done, continue' : 'Skip for now'}</div></div>
+        </div>
+      </div>`;
+
+    case 'vehicle_make':
+      return `<div class="ob-step">
+        ${backBtn}
+        <div class="ob-label">Vehicle</div>
+        <div class="ob-q">What's the <em>make</em> of your vehicle?</div>
+        <select class="ob-input" id="obCarMake" onchange="OB.currentVehicle.make=this.value">
+          <option value="">Select make...</option>
+          ${CAR_MAKES.map(m => `<option value="${m}" ${OB.currentVehicle.make===m?'selected':''}>${m}</option>`).join('')}
+        </select>
+        <div class="ob-footer">
+          <button class="ob-next" onclick="if(document.getElementById('obCarMake').value){OB.currentVehicle.make=document.getElementById('obCarMake').value;obNext();}">Continue →</button>
+          <button class="ob-skip" onclick="OB.step=OB_STEPS.indexOf('vehicle_ask');renderOBStep()">Cancel</button>
+        </div>
+      </div>`;
+
+    case 'vehicle_model':
+      return `<div class="ob-step">
+        ${backBtn}
+        <div class="ob-label">Vehicle</div>
+        <div class="ob-q">What's the <em>model?</em></div>
+        <input class="ob-input" id="obCarModel" placeholder="e.g. Camry, F-150, Model 3" value="${OB.currentVehicle.model||''}" oninput="OB.currentVehicle.model=this.value">
+        <div class="ob-footer">
+          <button class="ob-next" onclick="obNext()">Continue →</button>
+        </div>
+      </div>`;
+
+    case 'vehicle_year':
+      return `<div class="ob-step">
+        ${backBtn}
+        <div class="ob-label">Vehicle</div>
+        <div class="ob-q">What <em>year</em> is it?</div>
+        <input class="ob-input" id="obCarYear" type="number" placeholder="e.g. 2019" min="1970" max="2026" value="${OB.currentVehicle.year||''}" oninput="OB.currentVehicle.year=this.value">
+        <div class="ob-sub">Also, what's the current mileage? (optional)</div>
+        <input class="ob-input" id="obCarMileage" type="number" placeholder="e.g. 45000" value="${OB.currentVehicle.mileage||''}" oninput="OB.currentVehicle.mileage=this.value">
+        <div class="ob-footer">
+          <button class="ob-next" onclick="OB.currentVehicle.year=document.getElementById('obCarYear').value;OB.currentVehicle.mileage=document.getElementById('obCarMileage').value;obNext()">Continue →</button>
+        </div>
+      </div>`;
+
+    case 'vehicle_photo':
+      return `<div class="ob-step">
+        ${backBtn}
+        <div class="ob-label">Vehicle</div>
+        <div class="ob-q">Add a photo of your <em>${OB.currentVehicle.make||'vehicle'}</em></div>
+        <div class="ob-sub">Optional. We can also use it to confirm the make and model.</div>
+        ${OB.currentVehicle.photoUrl ? `<img src="${OB.currentVehicle.photoUrl}" class="ob-photo-preview" style="display:block;">` : ''}
+        <div class="ob-photo-area" onclick="document.getElementById('vehiclePhotoInput').click()">
+          <input type="file" id="vehiclePhotoInput" accept="image/*" style="display:none" onchange="handleObPhoto('vehicle',this)">
+          <div style="font-size:2rem;margin-bottom:8px;">📷</div>
+          <div style="font-size:0.85rem;color:var(--muted);">Tap to add a photo</div>
+        </div>
+        <div class="ob-footer">
+          <button class="ob-next" onclick="OB.vehicles.push({...OB.currentVehicle});OB.currentVehicle={};OB.step=OB_STEPS.indexOf('vehicle_ask');renderOBStep()">Save Vehicle →</button>
+          <button class="ob-skip" onclick="OB.vehicles.push({...OB.currentVehicle});OB.currentVehicle={};OB.step=OB_STEPS.indexOf('vehicle_ask');renderOBStep()">Skip photo & save</button>
+        </div>
+      </div>`;
+
+    case 'pet_ask':
+      return `<div class="ob-step">
+        ${backBtn}
+        <div class="ob-label">Pets</div>
+        <div class="ob-q">Do you have any <em>pets</em> to track?</div>
+        <div class="ob-sub">We'll add reminders for vet visits, vaccinations, grooming, and more.</div>
+        ${OB.pets.length ? `<div style="margin-bottom:16px;">${OB.pets.map((p,i) => `<div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 16px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;"><span>${p.icon||'🐾'} ${p.name||p.type} ${p.breed?'· '+p.breed:''}</span><button onclick="OB.pets.splice(${i},1);renderOBStep()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:0.8rem;">✕</button></div>`).join('')}</div>` : ''}
+        <div class="ob-options" style="grid-template-columns:1fr 1fr;">
+          <div class="ob-opt" onclick="OB.step=OB_STEPS.indexOf('pet_type');renderOBStep()"><div class="oi">🐾</div><div class="ol">${OB.pets.length ? 'Add another' : 'Yes, add pet'}</div></div>
+          <div class="ob-opt" onclick="obNext()"><div class="oi">${OB.pets.length ? '✓' : '⏭'}</div><div class="ol">${OB.pets.length ? 'Done, continue' : 'Skip for now'}</div></div>
+        </div>
+      </div>`;
+
+    case 'pet_type':
+      return `<div class="ob-step">
+        ${backBtn}
+        <div class="ob-label">Pet</div>
+        <div class="ob-q">What type of <em>pet?</em></div>
+        <div class="ob-options" style="grid-template-columns:1fr 1fr 1fr 1fr;">
+          ${PET_TYPES.map(t => `<div class="ob-opt ${OB.currentPet.type===t.v?'sel':''}" onclick="obSelectPet('${t.v}','${t.icon}',this)"><div class="oi">${t.icon}</div><div class="ol" style="font-size:0.72rem;">${t.label}</div></div>`).join('')}
+        </div>
+        <div class="ob-footer">
+          <button class="ob-next" onclick="obNext()" ${!OB.currentPet.type?'disabled':''}>Continue →</button>
+          <button class="ob-skip" onclick="OB.step=OB_STEPS.indexOf('pet_ask');renderOBStep()">Cancel</button>
+        </div>
+      </div>`;
+
+    case 'pet_name':
+      return `<div class="ob-step">
+        ${backBtn}
+        <div class="ob-label">Pet</div>
+        <div class="ob-q">What's your ${OB.currentPet.icon||'🐾'} pet's <em>name?</em></div>
+        <input class="ob-input" id="obPetName" placeholder="e.g. Max, Luna, Charlie" value="${OB.currentPet.name||''}" oninput="OB.currentPet.name=this.value">
+        <div class="ob-footer">
+          <button class="ob-next" onclick="OB.currentPet.name=document.getElementById('obPetName').value;obNext()">Continue →</button>
+        </div>
+      </div>`;
+
+    case 'pet_breed':
+      const isdog = OB.currentPet.type === 'dog';
+      const iscat = OB.currentPet.type === 'cat';
+      const breeds = isdog ? DOG_BREEDS : iscat ? CAT_BREEDS : null;
+      return `<div class="ob-step">
+        ${backBtn}
+        <div class="ob-label">Pet</div>
+        <div class="ob-q">What breed is <em>${OB.currentPet.name||'your pet'}?</em></div>
+        <div class="ob-sub">Not sure? Add a photo and we'll identify the breed.</div>
+        ${breeds ? `<select class="ob-input" id="obPetBreed" onchange="OB.currentPet.breed=this.value">
+          <option value="">Select breed...</option>
+          ${breeds.map(b => `<option value="${b}" ${OB.currentPet.breed===b?'selected':''}>${b}</option>`).join('')}
+        </select>` : `<input class="ob-input" id="obPetBreed" placeholder="e.g. Tabby, Parakeet..." value="${OB.currentPet.breed||''}" oninput="OB.currentPet.breed=this.value">`}
+        <div class="ob-footer">
+          <button class="ob-next" onclick="if(document.getElementById('obPetBreed'))OB.currentPet.breed=document.getElementById('obPetBreed').value;obNext()">Continue →</button>
+          <button class="ob-skip" onclick="obNext()">I don't know the breed</button>
+        </div>
+      </div>`;
+
+    case 'pet_photo':
+      return `<div class="ob-step">
+        ${backBtn}
+        <div class="ob-label">Pet</div>
+        <div class="ob-q">Add a photo of <em>${OB.currentPet.name||'your pet'}</em></div>
+        <div class="ob-sub">${!OB.currentPet.breed ? "We'll use the photo to identify the breed." : "Optional — to personalize your pet's profile."}</div>
+        ${OB.currentPet.photoUrl ? `<img src="${OB.currentPet.photoUrl}" class="ob-photo-preview" style="display:block;">` : ''}
+        ${OB.currentPet.aiBreed ? `<div style="background:var(--green-light);border-radius:10px;padding:10px 14px;font-size:0.82rem;color:var(--green);margin-bottom:12px;">✨ AI identified: <strong>${OB.currentPet.aiBreed}</strong></div>` : ''}
+        <div class="ob-photo-area" onclick="document.getElementById('petPhotoInput').click()">
+          <input type="file" id="petPhotoInput" accept="image/*" style="display:none" onchange="handleObPhoto('pet',this)">
+          <div style="font-size:2rem;margin-bottom:8px;">📷</div>
+          <div style="font-size:0.85rem;color:var(--muted);">Tap to add a photo</div>
+        </div>
+        <div class="ob-footer">
+          <button class="ob-next" onclick="OB.pets.push({...OB.currentPet});OB.currentPet={};OB.step=OB_STEPS.indexOf('pet_ask');renderOBStep()">Save ${OB.currentPet.name||'Pet'} →</button>
+          <button class="ob-skip" onclick="OB.pets.push({...OB.currentPet});OB.currentPet={};OB.step=OB_STEPS.indexOf('pet_ask');renderOBStep()">Skip photo & save</button>
+        </div>
+      </div>`;
+
+    case 'summary':
+      return `<div class="ob-step">
+        <div class="ob-label">All set!</div>
+        <div class="ob-q">Here's your <em>profile summary</em></div>
+        <div class="ob-sub" style="margin-bottom:20px;">Ready to build your personalized maintenance schedule.</div>
+        
+        <div class="ob-summary-card">
+          <div style="font-size:0.72rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;">Home</div>
+          ${OB.home.photoUrl ? `<img src="${OB.home.photoUrl}" style="width:100%;height:120px;object-fit:cover;border-radius:10px;margin-bottom:10px;">` : ''}
+          <div class="ob-summary-row">🏠 <span>${HOME_TYPES.find(t=>t.v===OB.home.type)?.label||'Home'}</span>${OB.home.own?`<span class="ob-tag">${OB.home.own==='own'?'Owner':'Renter'}</span>`:''}</div>
+          ${OB.home.hvac?`<div class="ob-summary-row">🌀 <span>${HVAC_TYPES.find(t=>t.v===OB.home.hvac)?.label||OB.home.hvac}</span></div>`:''}
+          ${OB.home.yearBuilt?`<div class="ob-summary-row">📅 <span>Built ${OB.home.yearBuilt}</span></div>`:''}
+          ${OB.home.address?`<div class="ob-summary-row">📍 <span style="font-size:0.78rem;color:var(--muted);">${OB.home.address}</span></div>`:''}
+        </div>
+
+        ${OB.vehicles.length ? `<div class="ob-summary-card">
+          <div style="font-size:0.72rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;">Vehicles</div>
+          ${OB.vehicles.map(v=>`<div class="ob-summary-row">🚗 <span>${v.year||''} ${v.make} ${v.model||''}</span>${v.mileage?`<span class="ob-tag">${Number(v.mileage).toLocaleString()} mi</span>`:''}</div>`).join('')}
+        </div>` : ''}
+
+        ${OB.pets.length ? `<div class="ob-summary-card">
+          <div style="font-size:0.72rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;">Pets</div>
+          ${OB.pets.map(p=>`<div class="ob-summary-row">${p.icon||'🐾'} <span>${p.name||'Pet'}</span>${p.breed?`<span class="ob-tag">${p.breed}</span>`:''}</div>`).join('')}
+        </div>` : ''}
+
+        <div class="ob-footer">
+          <button class="ob-next" onclick="runAIFromOnboarding()">✨ Build My Schedule →</button>
+        </div>
+      </div>`;
+
+    default:
+      obNext();
+      return '';
+  }
+}
+
+function obSelect(obj, field, value, el) {
+  if (obj === 'home') OB.home[field] = value;
+  el.closest('.ob-options').querySelectorAll('.ob-opt').forEach(o => o.classList.remove('sel'));
+  el.classList.add('sel');
+  const nextBtn = document.getElementById('obNextBtn');
+  if (nextBtn) nextBtn.disabled = false;
+}
+
+function obSelectPet(type, icon, el) {
+  OB.currentPet.type = type;
+  OB.currentPet.icon = icon;
+  el.closest('.ob-options').querySelectorAll('.ob-opt').forEach(o => o.classList.remove('sel'));
+  el.classList.add('sel');
+  const nextBtn = document.getElementById('obNextBtn');
+  if (nextBtn) nextBtn.disabled = false;
+}
+
+async function handleObPhoto(target, input) {
+  if (!input.files || !input.files.length || !S.user) return;
+  const file = input.files[0];
+  const area = input.closest('.ob-photo-area');
+  if (area) area.innerHTML = '<div style="padding:20px;text-align:center;color:var(--muted);">Uploading...</div>';
+
+  try {
+    // Upload to Supabase Storage
+    const ext = file.name.split('.').pop();
+    const path = `${S.user.id}/profile/${target}-${Date.now()}.${ext}`;
+    const { error } = await sb.storage.from('task-photos').upload(path, file, { upsert: true });
+    if (error) throw error;
+    const { data: signed } = await sb.storage.from('task-photos').createSignedUrl(path, 60 * 60 * 24 * 365 * 5);
+    const url = signed?.signedUrl;
+    if (!url) throw new Error('No URL');
+
+    if (target === 'home') OB.home.photoUrl = url;
+    else if (target === 'vehicle') OB.currentVehicle.photoUrl = url;
+    else if (target === 'pet') {
+      OB.currentPet.photoUrl = url;
+      // If no breed, use AI vision to identify
+      if (!OB.currentPet.breed) {
+        await identifyPetBreed(file, url);
+      }
+    }
+    renderOBStep();
+  } catch(e) {
+    console.error(e);
+    toast('Upload failed. Please try again.');
+    renderOBStep();
+  }
+}
+
+async function identifyPetBreed(file, url) {
+  try {
+    // Convert to base64 for Claude vision API
+    const base64 = await new Promise((res, rej) => {
+      const r = new FileReader();
+      r.onload = () => res(r.result.split(',')[1]);
+      r.onerror = rej;
+      r.readAsDataURL(file);
+    });
+
+    const response = await fetch(`${SURL}/functions/v1/identify-pet`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SKEY}` },
+      body: JSON.stringify({ image: base64, mediaType: file.type })
+    });
+    const { breed } = await response.json();
+    if (breed) {
+      OB.currentPet.aiBreed = breed;
+      OB.currentPet.breed = breed;
+    }
+  } catch(e) { console.error('Breed ID failed:', e); }
+}
+
+async function loadStreetView() {
+  const address = document.getElementById('obAddress')?.value?.trim();
+  if (!address) { toast('Please enter your address first.'); return; }
+  OB.home.address = address;
+
+  // Use Google Street View Static API
+  const GOOGLE_KEY = 'YOUR_GOOGLE_MAPS_API_KEY'; // placeholder
+  const encodedAddr = encodeURIComponent(address);
+  const svUrl = `https://maps.googleapis.com/maps/api/streetview?size=600x300&location=${encodedAddr}&key=${GOOGLE_KEY}`;
+  
+  const container = document.getElementById('streetViewContainer');
+  const img = document.getElementById('streetViewImg');
+  if (container && img) {
+    img.src = svUrl;
+    img.onload = () => { container.style.display = 'block'; OB.home.streetViewUrl = svUrl; };
+    img.onerror = () => toast('Could not load street view. You can add a photo in the next step.');
+  }
+}
+
+async function runAIFromOnboarding() {
+  // Save profile data to S.profile
+  S.profile = {
+    type: OB.home.type,
+    hvac: OB.home.hvac,
+    yearBuilt: OB.home.yearBuilt || 'unknown',
+    own: OB.home.own || 'own',
+    address: OB.home.address,
+    photoUrl: OB.home.photoUrl || OB.home.streetViewUrl,
+    vehicles: OB.vehicles,
+    pets: OB.pets,
+  };
+
+  await saveProfileExtended();
+  await runAI();
+}
+
+async function saveProfileExtended() {
+  if (!S.user) return;
+  try {
+    await sb.from('home_profiles').upsert({
+      user_id: S.user.id,
+      home_type: S.profile.type,
+      hvac: S.profile.hvac,
+      year_built: S.profile.yearBuilt,
+      ownership: S.profile.own,
+      address: S.profile.address,
+      photo_url: S.profile.photoUrl,
+      vehicles: S.profile.vehicles,
+      pets: S.profile.pets,
+    }, { onConflict: 'user_id' });
+  } catch(e) { console.error(e); }
+}
+
+
+
+// Legacy pick function (kept for bundle screen compatibility)
 function pick(el) {
   const g = el.dataset.g;
   document.querySelectorAll(`[data-g="${g}"]`).forEach(b => b.classList.remove('on'));
   el.classList.add('on');
   S.profile[g] = el.dataset.v;
-  const ok = S.profile.type && S.profile.hvac;
-  document.getElementById('setupBtn').disabled = !ok;
 }
 
 async function runAI() {
-  S.profile.yearBuilt = document.getElementById('yearBuilt').value || 'unknown';
+  if (!S.profile.yearBuilt) S.profile.yearBuilt = 'unknown';
   await saveProfile();
   show('screen-ai');
-  const msgs = ['Analyzing your home type and age...','Checking HVAC requirements...','Building your personalized schedule...','Adding seasonal timing...','Finalizing your tasks...'];
+  const hasCar = (S.profile.vehicles||[]).length > 0;
+  const hasPet = (S.profile.pets||[]).length > 0;
+  const msgs = [
+    'Analyzing your home details...',
+    hasCar ? 'Adding vehicle maintenance tasks...' : 'Checking HVAC requirements...',
+    hasPet ? 'Building pet care reminders...' : 'Building your personalized schedule...',
+    'Adding seasonal timing...',
+    'Finalizing your tasks...'
+  ];
   let i = 0;
   const iv = setInterval(() => { document.getElementById('aiMsg').textContent = msgs[++i % msgs.length]; }, 1900);
   try {
@@ -940,7 +1450,9 @@ async function runAI() {
         homeType: S.profile.type,
         hvac: S.profile.hvac,
         yearBuilt: S.profile.yearBuilt,
-        ownership: S.profile.own
+        ownership: S.profile.own,
+        vehicles: S.profile.vehicles || [],
+        pets: S.profile.pets || []
       })
     });
     const parsed = await res.json();
@@ -1888,7 +2400,7 @@ async function resetHomeProfile() {
   S.profile = {};
   S.allTasks = [];
   S.tasks = [];
-  show('screen-setup');
+  initOnboarding();
 }
 
 async function deleteAccount() {
