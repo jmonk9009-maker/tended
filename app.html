@@ -996,37 +996,6 @@ async function startTrial(plan) {
 }
 
 
-// ── TASK TIPS & COSTS ──
-const TASK_COSTS = {
-  hvac: { min: 80, max: 300, unit: 'service' },
-  plumbing: { min: 50, max: 500, unit: 'repair' },
-  exterior: { min: 100, max: 800, unit: 'project' },
-  kitchen: { min: 30, max: 200, unit: 'service' },
-  safety: { min: 5, max: 50, unit: 'check' },
-  general: { min: 20, max: 150, unit: 'task' },
-};
-
-function getTaskCost(category) {
-  const c = TASK_COSTS[category] || TASK_COSTS.general;
-  return `$${c.min}–$${c.max}`;
-}
-
-function getYouTubeUrl(taskName) {
-  return `https://www.youtube.com/results?search_query=${encodeURIComponent('how to ' + taskName + ' DIY')}`;
-}
-
-function getTaskTip(taskName, category) {
-  const cost = getTaskCost(category);
-  const ytUrl = getYouTubeUrl(taskName);
-  return `<div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">
-    <div style="display:inline-flex;align-items:center;gap:5px;background:var(--surface2);border-radius:8px;padding:6px 12px;font-size:0.75rem;color:var(--muted);">
-      💰 Typical cost: <strong style="color:var(--text);">${cost}</strong>
-    </div>
-    <a href="${ytUrl}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:5px;background:#ff000015;border-radius:8px;padding:6px 12px;font-size:0.75rem;color:#cc0000;text-decoration:none;font-weight:500;">
-      ▶ Watch tutorial
-    </a>
-  </div>`;
-}
 
 // ── TASKS ──
 function calcHealthScore(activeTasks) {
@@ -1319,7 +1288,12 @@ function openDetail(id) {
         <span class="td-chip ${days<0?'r':'g'}">${fmtDue(task)}</span>
       </div>
       ${task.note?`<div style="margin-top:10px;font-size:0.8rem;color:var(--muted);font-style:italic;">${task.note}</div>`:''}
-      ${getTaskTip(task.name, task.category)}
+      <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">
+        <div style="display:inline-flex;align-items:center;gap:5px;background:var(--surface2);border-radius:8px;padding:6px 12px;font-size:0.75rem;color:var(--muted);">
+          💰 Pro: ${getCostEstimate(task.category).pro} &nbsp;·&nbsp; DIY: ${getCostEstimate(task.category).diy}
+        </div>
+        <a href="${getYouTubeUrl(task.name)}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:5px;background:#ff000015;border-radius:8px;padding:6px 12px;font-size:0.75rem;color:#cc0000;text-decoration:none;font-weight:500;">▶ Watch tutorial</a>
+      </div>
       <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;">
         <a href="${getYouTubeUrl(task.name)}" target="_blank" style="display:inline-flex;align-items:center;gap:5px;background:#ff0000;color:#fff;border-radius:8px;padding:6px 12px;font-size:0.75rem;font-weight:600;text-decoration:none;">▶ Watch Tutorial</a>
         <div style="display:inline-flex;align-items:center;gap:5px;background:var(--surface2);border-radius:8px;padding:6px 12px;font-size:0.75rem;color:var(--muted);">💰 Pro: ${getCostEstimate(task.category).pro} &nbsp;·&nbsp; DIY: ${getCostEstimate(task.category).diy}</div>
