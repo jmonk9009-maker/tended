@@ -407,7 +407,7 @@ body {
 <!-- PAYWALL SCREEN -->
 <div id="screen-paywall" class="screen" style="display:flex;flex-direction:column;min-height:100vh;background:var(--bg);">
   <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 24px;text-align:center;">
-    <div style="font-size:3rem;margin-bottom:16px;">🌿</div>
+    <div style="font-size:3rem;margin-bottom:16px;">🏠</div>
     <div style="font-family:'DM Sans',sans-serif;font-size:0.72rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--green);margin-bottom:12px;">Your schedule is ready</div>
     <div style="font-family:var(--serif,serif);font-size:1.8rem;font-weight:600;line-height:1.2;margin-bottom:12px;color:var(--text);">Start your free<br><em style="color:var(--green);">14-day trial</em></div>
     <div style="font-size:0.88rem;color:var(--muted);margin-bottom:32px;max-width:300px;line-height:1.6;">No charge today. Cancel anytime before your trial ends. Your AI-personalized schedule is waiting.</div>
@@ -482,7 +482,7 @@ body {
       <div class="f-group"><label class="f-label">Category</label>
         <select class="f-select" id="tCat">
           <option value="hvac">🌀 HVAC</option><option value="plumbing">🔧 Plumbing</option>
-          <option value="exterior">🌿 Exterior</option><option value="kitchen">🍳 Kitchen</option>
+          <option value="exterior">🏡 Exterior</option><option value="kitchen">🍳 Kitchen</option>
           <option value="safety">🔒 Safety</option><option value="general">🏠 General</option>
         </select>
       </div>
@@ -648,7 +648,7 @@ function getCostEstimate(category) {
 const CATS = {
   hvac:     { label:'HVAC',     icon:'🌀', color:'#4a90d9' },
   plumbing: { label:'Plumbing', icon:'🔧', color:'#5ba4b5' },
-  exterior: { label:'Exterior', icon:'🌿', color:'#7cb87a' },
+  exterior: { label:'Exterior', icon:'🏡', color:'#7cb87a' },
   kitchen:  { label:'Kitchen',  icon:'🍳', color:'#d4a855' },
   safety:   { label:'Safety',   icon:'🔒', color:'#d46b4a' },
   general:  { label:'General',  icon:'🏠', color:'#a08060' }
@@ -919,7 +919,7 @@ function defaultBundles() {
       {name:'Test smoke detectors',category:'safety',frequencyDays:180,note:''},
       {name:'Test CO detectors',category:'safety',frequencyDays:180,note:''},
       {name:'Check fire extinguisher',category:'safety',frequencyDays:365,note:'Check pressure + expiry'}]},
-    { id:'exterior', name:'Exterior', icon:'🌿', aiTag:false, tasks:[
+    { id:'exterior', name:'Exterior', icon:'🏡', aiTag:false, tasks:[
       {name:'Clean gutters',category:'exterior',frequencyDays:180,note:'Spring and fall'},
       {name:'Inspect roof',category:'exterior',frequencyDays:365,note:'Look for missing/damaged shingles'},
       {name:'Check weatherstripping',category:'exterior',frequencyDays:365,note:''}]},
@@ -1129,7 +1129,7 @@ function renderDash() {
   // Home Health Score
   const score = calcHealthScore(active);
   const scoreColor = score >= 80 ? 'var(--green)' : score >= 50 ? '#d4870a' : 'var(--red)';
-  const scoreLabel = score >= 80 ? 'Great shape! 🌿' : score >= 50 ? 'Needs attention' : 'Action required';
+  const scoreLabel = score >= 80 ? 'Great shape! ✓' : score >= 50 ? 'Needs attention' : 'Action required';
   h += `<div class="coverage-bar">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
       <div>
@@ -1151,7 +1151,7 @@ function renderDash() {
   } else if (overdue.length > 0) {
     h += `<strong>${overdue.length} overdue task${overdue.length>1?'s':''}</strong> are dragging your score down. Tap to complete them.`;
   } else {
-    h += `<strong>All ${total} tasks</strong> active and on schedule. 🌿`;
+    h += `<strong>All ${total} tasks</strong> active and on schedule. ✓`;
   }
   h += `</div></div>`;
 
@@ -1169,7 +1169,7 @@ function renderDash() {
   if (streak > 1) h += `<div class="streak"><div class="streak-icon">🔥</div><div class="streak-txt"><strong>${streak}-task streak!</strong> You've completed ${streak} tasks on time in a row. Keep it up!</div></div>`;
   else if (doneToday > 0) h += `<div class="streak"><div class="streak-icon">✅</div><div class="streak-txt"><strong>${doneToday} task${doneToday>1?'s':''} done today.</strong> Great work!</div></div>`;
 
-  if (overdue.length === 0 && week.length === 0) h += `<div class="empty"><div class="ei">🌿</div><p>All caught up!<br>Nothing overdue or due this week.</p></div>`;
+  if (overdue.length === 0 && week.length === 0) h += `<div class="empty"><div class="ei">✓</div><p>All caught up!<br>Nothing overdue or due this week.</p></div>`;
   if (overdue.length > 0) h += `<div class="task-grp"><div class="section-hdr"><div class="section-lbl">Overdue <span class="cnt-badge">${overdue.length}</span></div></div>${overdue.map(taskCard).join('')}</div>`;
   if (week.length > 0) h += `<div class="task-grp"><div class="section-hdr"><div class="section-lbl">Due This Week <span class="cnt-badge a">${week.length}</span></div></div>${week.map(taskCard).join('')}</div>`;
   if (upcoming.length > 0) h += `<div class="task-grp"><div class="section-hdr"><div class="section-lbl">Coming Up <span class="cnt-badge g">${upcoming.length}</span></div></div>${upcoming.map(taskCard).join('')}</div>`;
@@ -1587,7 +1587,7 @@ async function addSeasonalTasks(tasks, lastKey) {
   S.tasks = S.allTasks.filter(t => !t.locked);
   localStorage.setItem(lastKey, '1');
   closeModal('seasonalModal');
-  toast(added > 0 ? `${added} seasonal task${added>1?'s':''} added! 🌿` : 'No new tasks added.');
+  toast(added > 0 ? `${added} seasonal task${added>1?'s':''} added! ✓` : 'No new tasks added.');
   renderApp();
 }
 
@@ -1709,7 +1709,7 @@ function openProfile() {
         <div style="font-weight:600;font-size:0.92rem;">${S.user?.email}</div>
         <div style="font-size:0.78rem;color:var(--muted);margin-top:4px;">Member since ${new Date(S.user?.created_at || Date.now()).toLocaleDateString('en-US',{month:'long',year:'numeric'})}</div>
         <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
-          <div style="background:var(--green-light);border-radius:8px;padding:5px 12px;font-size:0.72rem;color:var(--green);font-weight:600;">${Math.floor((Date.now() - new Date(S.user?.created_at || Date.now())) / 86400000)} days tending 🌿</div>
+          <div style="background:var(--green-light);border-radius:8px;padding:5px 12px;font-size:0.72rem;color:var(--green);font-weight:600;">${Math.floor((Date.now() - new Date(S.user?.created_at || Date.now())) / 86400000)} days tending</div>
           <div style="background:var(--surface2);border-radius:8px;padding:5px 12px;font-size:0.72rem;color:var(--muted);">${S.allTasks.reduce((s,t)=>s+t.history.length,0)} completions</div>
         </div>
       </div>
