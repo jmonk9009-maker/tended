@@ -512,6 +512,38 @@ body {
   </div>
 </div>
 
+<!-- COMPLETE DIALOG MODAL -->
+<div class="overlay" id="completeModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-hdr">
+      <div class="modal-title">Mark as Done</div>
+      <button class="modal-x" onclick="closeModal('completeModal')">✕</button>
+    </div>
+    <div class="modal-body" style="padding:18px 22px;">
+      <div class="f-label">Notes (optional)</div>
+      <textarea id="completeNote" placeholder="Any observations or issues..." style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;font-family:'DM Sans',sans-serif;font-size:0.88rem;resize:none;height:72px;margin-bottom:16px;color:var(--text);outline:none;"></textarea>
+      <div class="f-label">Who did the work? (optional)</div>
+      <input id="completeContractor" type="text" placeholder="e.g. John's HVAC, DIY" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;font-family:'DM Sans',sans-serif;font-size:0.88rem;margin-bottom:16px;color:var(--text);outline:none;">
+      <div class="f-label">Cost (optional)</div>
+      <input id="completeCost" type="number" placeholder="0.00" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;font-family:'DM Sans',sans-serif;font-size:0.88rem;margin-bottom:20px;color:var(--text);outline:none;">
+      <button class="big-btn" id="completeConfirmBtn" onclick="confirmComplete()">✓ Confirm Done</button>
+    </div>
+  </div>
+</div>
+
+<!-- SEASONAL REFRESH MODAL -->
+<div class="overlay" id="seasonalModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-hdr">
+      <div class="modal-title" id="seasonalTitle">Seasonal Check-in</div>
+      <button class="modal-x" onclick="closeModal('seasonalModal')">✕</button>
+    </div>
+    <div class="modal-body" id="seasonalContent" style="padding:18px 22px;"></div>
+  </div>
+</div>
+
 <!-- PROFILE MODAL -->
 <div class="overlay" id="profileModal">
   <div class="modal">
@@ -584,6 +616,7 @@ async function boot() {
         show('screen-app');
         renderApp();
         if (shouldShowPushPrompt()) initPush();
+        checkSeasonalRefresh();
       }
     } else if (evt === 'SIGNED_OUT') {
       _lastUserId = null;
@@ -867,6 +900,30 @@ async function addBundles() {
 }
 
 // ── TASKS ──
+function calcHealthScore(activeTasks) {
+  if (!activeTasks.length) return 100;
+  let total = 0;
+  activeTasks.forEach(t => {
+    const d = daysTil(t);
+    if (d < -14) total += 0;
+    else if (d < -7) total += 20;
+    else if (d < 0) total += 50;
+    else if (d <= 7) total += 85;
+    else total += 100;
+  });
+  return Math.round(total / activeTasks.length);
+}
+
+function calcStreak(activeTasks) {
+  // Count tasks completed on time (within their due window) consecutively
+  const completions = activeTasks
+    .filter(t => t.history.length > 0)
+    .map(t => ({ name: t.name, date: t.history[0]?.date }))
+    .filter(t => t.date)
+    .sort((a, b) => new Date(b.date) - new Date(a.date));
+  return completions.length;
+}
+
 function makeTask(name, category, frequencyDays, note = '') {
   const offset = Math.floor(Math.random() * frequencyDays) - Math.floor(frequencyDays * 0.3);
   const due = new Date();
@@ -971,20 +1028,48 @@ function renderDash() {
 
   let h = '';
 
-  // Coverage bar
+  // Home Health Score
+  const score = calcHealthScore(active);
+  const scoreColor = score >= 80 ? 'var(--green)' : score >= 50 ? '#d4870a' : 'var(--red)';
+  const scoreLabel = score >= 80 ? 'Great shape! 🌿' : score >= 50 ? 'Needs attention' : 'Action required';
   h += `<div class="coverage-bar">
-    <div class="cov-top"><div class="cov-label">Home Coverage</div><div class="cov-pct">${pct}%</div></div>
-    <div class="cov-track"><div class="cov-fill" style="width:${pct}%"></div></div>
-    <div class="cov-msg">`;
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+      <div>
+        <div class="cov-label">Home Health Score</div>
+        <div style="font-size:0.75rem;color:var(--muted);margin-top:1px;">${scoreLabel}</div>
+      </div>
+      <div style="text-align:right;">
+        <div style="font-family:'DM Sans',sans-serif;font-size:2rem;font-weight:700;color:${scoreColor};line-height:1;">${score}</div>
+        <div style="font-size:0.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;">/ 100</div>
+      </div>
+    </div>
+    <div class="cov-track"><div class="cov-fill" style="width:${score}%;background:${scoreColor};"></div></div>
+    <div class="cov-msg" style="margin-top:8px;">`;
   if (S.tier === 'free' && locked.length > 0) {
-    h += `<strong>${covered} of ${total} tasks</strong> active. <strong>${locked.length} tasks</strong> waiting to protect your home.
+    h += `<strong>${covered} of ${total} tasks</strong> active. <strong>${locked.length} tasks</strong> locked.
     <br><button class="cov-upgrade" onclick="openUpgrade('coverage')">Unlock full coverage →</button>`;
+  } else if (score >= 80) {
+    h += `Your home is well maintained. Keep up the good work!`;
+  } else if (overdue.length > 0) {
+    h += `<strong>${overdue.length} overdue task${overdue.length>1?'s':''}</strong> are dragging your score down. Tap to complete them.`;
   } else {
-    h += `<strong>All ${total} tasks</strong> active. Your home is fully covered. 🌿`;
+    h += `<strong>All ${total} tasks</strong> active and on schedule. 🌿`;
   }
   h += `</div></div>`;
 
-  if (doneToday > 0) h += `<div class="streak"><div class="streak-icon">🔥</div><div class="streak-txt"><strong>${doneToday} task${doneToday>1?'s':''} done today.</strong> Keep it up!</div></div>`;
+  // Home value insight
+  const completions = active.reduce((sum, t) => sum + t.history.length, 0);
+  if (completions >= 5) {
+    const valueAdd = Math.min(completions * 180, 8500);
+    h += `<div class="streak" style="background:linear-gradient(135deg,rgba(45,90,61,0.08),rgba(45,90,61,0.04));border-left:3px solid var(--green);">
+      <div class="streak-icon">🏡</div>
+      <div class="streak-txt"><strong>Your maintenance habits could add $${valueAdd.toLocaleString()}+ to your home's value.</strong> Consistent records impress buyers.</div>
+    </div>`;
+  }
+
+  const streak = calcStreak(active);
+  if (streak > 1) h += `<div class="streak"><div class="streak-icon">🔥</div><div class="streak-txt"><strong>${streak}-task streak!</strong> You've completed ${streak} tasks on time in a row. Keep it up!</div></div>`;
+  else if (doneToday > 0) h += `<div class="streak"><div class="streak-icon">✅</div><div class="streak-txt"><strong>${doneToday} task${doneToday>1?'s':''} done today.</strong> Great work!</div></div>`;
 
   if (overdue.length === 0 && week.length === 0) h += `<div class="empty"><div class="ei">🌿</div><p>All caught up!<br>Nothing overdue or due this week.</p></div>`;
   if (overdue.length > 0) h += `<div class="task-grp"><div class="section-hdr"><div class="section-lbl">Overdue <span class="cnt-badge">${overdue.length}</span></div></div>${overdue.map(taskCard).join('')}</div>`;
@@ -1069,7 +1154,8 @@ function openDetail(id) {
     hist = recent.length ? recent.map(h=>`<div class="hist-item"><div class="hist-dot"></div><div><div class="hist-date">${h.date}</div></div></div>`).join('') : '<div style="color:var(--muted);font-size:0.83rem;padding:10px 0;">No history yet.</div>';
     if (task.history.length > 1) hist += `<div class="pro-gate" style="margin-top:10px;"><p>+${task.history.length-1} more entries. Upgrade to see full history.</p><button onclick="openUpgrade('history')">Upgrade →</button></div>`;
   } else {
-    hist = task.history.length ? task.history.map(h=>`<div class="hist-item"><div class="hist-dot"></div><div><div class="hist-date">${h.date}</div>${h.note?`<div class="hist-note">${h.note}</div>`:''}</div></div>`).join('') : '<div style="color:var(--muted);font-size:0.83rem;padding:10px 0;">No history yet.</div>';
+    hist = task.history.length ? task.history.map(h=>`<div class="hist-item"><div class="hist-dot"></div><div><div class="hist-date">${h.date}</div>${h.note?`<div class="hist-note">${h.note}</div>`:''
+}${h.contractor?`<div class="hist-note">👷 ${h.contractor}${h.cost?' · $'+Number(h.cost).toLocaleString():''}</div>`:''}</div></div>`).join('') : '<div style="color:var(--muted);font-size:0.83rem;padding:10px 0;">No history yet.</div>';
   }
 
   // Photos section (Pro only)
@@ -1106,7 +1192,7 @@ function openDetail(id) {
       ${task.note?`<div style="margin-top:10px;font-size:0.8rem;color:var(--muted);font-style:italic;">${task.note}</div>`:''}
     </div>
     <div style="padding:18px 22px;">
-      <button class="big-btn" onclick="completeTask('${String(task.id)}'); closeModal('detailModal'); renderApp();">✓ Mark as Done</button>
+      <button class="big-btn" onclick="openCompleteDialog('${String(task.id)}')">✓ Mark as Done</button>
       <button class="snooze-btn" onclick="snoozeTask('${String(task.id)}')">⏰ Snooze 1 week</button>
       <div style="margin-top:22px;"><div class="f-label">Completion History</div><div>${hist}</div></div>
       ${photosSection}
@@ -1162,15 +1248,17 @@ async function exportPDF(taskId) {
   const sid = String(taskId);
   const task = S.allTasks.find(t => String(t.id) === sid || String(t.dbId) === sid);
   if (!task) return;
-  toast('Generating PDF...');
+  toast('Generating report...');
 
-  // Build HTML content for PDF
+  const totalCost = task.history.reduce((sum, h) => sum + (h.cost || 0), 0);
   const histRows = task.history.map(h => {
-    const photos = (h.photos || []).map(url => `<img src="${url}" style="width:80px;height:80px;object-fit:cover;border-radius:6px;margin:2px;">`).join('');
-    return `<tr style="border-bottom:1px solid #eee;">
-      <td style="padding:8px;font-size:13px;">${h.date}</td>
-      <td style="padding:8px;font-size:13px;">${h.note || '—'}</td>
-      <td style="padding:8px;">${photos || '—'}</td>
+    const photos = (h.photos || []).map(url => `<img src="${url}" style="width:72px;height:72px;object-fit:cover;border-radius:6px;margin:2px;border:1px solid #eee;">`).join('');
+    return `<tr style="border-bottom:1px solid #f0ede8;">
+      <td style="padding:10px 12px;font-size:12px;color:#555;white-space:nowrap;">${h.date}</td>
+      <td style="padding:10px 12px;font-size:12px;">${h.note || '—'}</td>
+      <td style="padding:10px 12px;font-size:12px;">${h.contractor || '—'}</td>
+      <td style="padding:10px 12px;font-size:12px;white-space:nowrap;">${h.cost ? '$' + Number(h.cost).toLocaleString() : '—'}</td>
+      <td style="padding:10px 12px;">${photos || '—'}</td>
     </tr>`;
   }).join('');
 
@@ -1178,23 +1266,41 @@ async function exportPDF(taskId) {
 <html>
 <head><meta charset="utf-8"><title>${task.name} — Maintenance Record</title>
 <style>
-  body { font-family: -apple-system, sans-serif; padding: 40px; color: #1a1a1a; }
-  h1 { font-size: 22px; margin-bottom: 4px; }
-  .meta { color: #666; font-size: 13px; margin-bottom: 24px; }
-  table { width: 100%; border-collapse: collapse; }
-  th { text-align: left; padding: 8px; background: #f5f5f5; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; }
-  .footer { margin-top: 32px; font-size: 11px; color: #999; }
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&display=swap');
+  body { font-family: 'DM Sans', -apple-system, sans-serif; padding: 48px; color: #1a1710; background: #fff; max-width: 900px; margin: 0 auto; }
+  .badge { display: inline-block; background: #eef4f0; color: #2d5a3d; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 20px; }
+  h1 { font-size: 26px; font-weight: 600; margin-bottom: 6px; }
+  .meta { color: #7a7060; font-size: 13px; margin-bottom: 8px; }
+  .note { font-size: 13px; color: #555; font-style: italic; margin-bottom: 24px; padding: 12px 16px; background: #f8f5ef; border-radius: 8px; }
+  .stats { display: flex; gap: 20px; margin-bottom: 28px; }
+  .stat { background: #f8f5ef; border-radius: 10px; padding: 14px 20px; }
+  .stat-num { font-size: 22px; font-weight: 700; color: #2d5a3d; }
+  .stat-label { font-size: 11px; color: #7a7060; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 2px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  thead tr { background: #eef4f0; }
+  th { text-align: left; padding: 10px 12px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: #2d5a3d; }
+  tbody tr:hover { background: #fafaf8; }
+  .footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid #e0d8cc; font-size: 11px; color: #aaa; display: flex; justify-content: space-between; }
 </style>
 </head>
 <body>
+  <div class="badge">✓ Verified Maintenance Record · Tended</div>
   <h1>${task.name}</h1>
-  <div class="meta">Category: ${task.category} &nbsp;|&nbsp; Every ${task.frequencyDays} days &nbsp;|&nbsp; Generated: ${new Date().toLocaleDateString()}</div>
-  ${task.note ? `<p style="font-size:13px;color:#555;margin-bottom:20px;font-style:italic;">${task.note}</p>` : ''}
+  <div class="meta">Category: ${task.category} &nbsp;·&nbsp; Frequency: every ${task.frequencyDays} days &nbsp;·&nbsp; Generated: ${new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})}</div>
+  ${task.note ? `<div class="note">${task.note}</div>` : ''}
+  <div class="stats">
+    <div class="stat"><div class="stat-num">${task.history.length}</div><div class="stat-label">Completions</div></div>
+    ${totalCost > 0 ? `<div class="stat"><div class="stat-num">$${totalCost.toLocaleString()}</div><div class="stat-label">Total spent</div></div>` : ''}
+    <div class="stat"><div class="stat-num">${task.history.filter(h => h.photos?.length).length}</div><div class="stat-label">With photos</div></div>
+  </div>
   <table>
-    <thead><tr><th>Date</th><th>Notes</th><th>Photos</th></tr></thead>
-    <tbody>${histRows || '<tr><td colspan="3" style="padding:12px;color:#999;">No history yet.</td></tr>'}</tbody>
+    <thead><tr><th>Date</th><th>Notes</th><th>Contractor</th><th>Cost</th><th>Photos</th></tr></thead>
+    <tbody>${histRows || '<tr><td colspan="5" style="padding:16px 12px;color:#aaa;">No history recorded yet.</td></tr>'}</tbody>
   </table>
-  <div class="footer">Generated by Tended &mdash; usetended.com</div>
+  <div class="footer">
+    <span>Generated by Tended · usetended.com</span>
+    <span>${new Date().toLocaleDateString()}</span>
+  </div>
 </body>
 </html>`;
 
@@ -1202,10 +1308,10 @@ async function exportPDF(taskId) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `${task.name.replace(/[^a-z0-9]/gi,'_')}_maintenance_record.html`;
+  a.download = `${task.name.replace(/[^a-z0-9]/gi,'_')}_record.html`;
   a.click();
   URL.revokeObjectURL(url);
-  toast('PDF downloaded ✓');
+  toast('Report downloaded ✓');
 }
 
 // ── UPGRADE ──
@@ -1226,6 +1332,155 @@ function openUpgrade(ctx = '') {
     sub.textContent = 'Unlock your full home schedule and never miss a maintenance task.';
   }
   openModal('upgradeModal');
+}
+
+// ── COMPLETE DIALOG ──
+let _completeTaskId = null;
+function openCompleteDialog(taskId) {
+  _completeTaskId = taskId;
+  document.getElementById('completeNote').value = '';
+  document.getElementById('completeContractor').value = '';
+  document.getElementById('completeCost').value = '';
+  closeModal('detailModal');
+  openModal('completeModal');
+}
+
+async function confirmComplete() {
+  if (!_completeTaskId) return;
+  const btn = document.getElementById('completeConfirmBtn');
+  btn.disabled = true; btn.textContent = 'Saving...';
+  const note = document.getElementById('completeNote').value.trim();
+  const contractor = document.getElementById('completeContractor').value.trim();
+  const cost = document.getElementById('completeCost').value;
+  
+  const sid = String(_completeTaskId);
+  const task = S.allTasks.find(t => String(t.id) === sid || String(t.dbId) === sid);
+  if (!task) { closeModal('completeModal'); return; }
+
+  const date = new Date().toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+  task.history.unshift({ date, note, contractor, cost: cost ? parseFloat(cost) : null, photos: [] });
+  const nd = new Date(); nd.setDate(nd.getDate() + task.frequencyDays);
+  task.dueDate = nd.toISOString().split('T')[0];
+  
+  // Animate checkmark
+  const btn2 = document.querySelector(`[data-tc="${sid}"]`);
+  if (btn2) btn2.classList.add('pop');
+  const flash = document.createElement('div'); flash.className = 'flash'; document.body.appendChild(flash);
+  setTimeout(() => flash.remove(), 500);
+
+  await syncCompletionFull(task, date, note, contractor, cost ? parseFloat(cost) : null, []);
+  closeModal('completeModal');
+  toast(`✓ ${task.name} marked done`);
+  renderApp();
+  _completeTaskId = null;
+}
+
+async function syncCompletionFull(task, date, note, contractor, cost, photos) {
+  if (!S.user || !task.dbId) return;
+  setSyncing(true);
+  try {
+    await sb.from('task_history').insert({ 
+      task_id: task.dbId, user_id: S.user.id, 
+      completed_date: date, note: note || '', 
+      contractor: contractor || null, cost: cost || null,
+      photos: photos || []
+    });
+    await sb.from('tasks').update({ due_date: task.dueDate }).eq('id', task.dbId);
+  } catch(e) { console.error(e); }
+  finally { setSyncing(false); }
+}
+
+// ── SEASONAL REFRESH ──
+function getSeason() {
+  const m = new Date().getMonth();
+  if (m >= 2 && m <= 4) return 'spring';
+  if (m >= 5 && m <= 7) return 'summer';
+  if (m >= 8 && m <= 10) return 'fall';
+  return 'winter';
+}
+
+const SEASONAL_TASKS = {
+  spring: [
+    { name: 'Clean gutters and downspouts', category: 'exterior', frequencyDays: 180, note: 'Remove winter debris to prevent water damage' },
+    { name: 'Service air conditioning', category: 'hvac', frequencyDays: 365, note: 'Clean coils and replace filter before summer heat' },
+    { name: 'Inspect roof for winter damage', category: 'exterior', frequencyDays: 365, note: 'Look for missing shingles or ice dam damage' },
+    { name: 'Test and clean deck/patio', category: 'exterior', frequencyDays: 365, note: 'Check for rot, loose boards, and seal if needed' },
+  ],
+  summer: [
+    { name: 'Check window and door seals', category: 'exterior', frequencyDays: 365, note: 'Prevent cool air from escaping' },
+    { name: 'Flush outdoor faucets and hoses', category: 'plumbing', frequencyDays: 365, note: 'Check for leaks from winter frost' },
+    { name: 'Inspect attic for pests', category: 'general', frequencyDays: 365, note: 'Summer heat drives animals to seek cool spaces' },
+    { name: 'Clean dryer vent', category: 'general', frequencyDays: 365, note: 'Fire risk increases in summer — clear lint buildup' },
+  ],
+  fall: [
+    { name: 'Service furnace or heating system', category: 'hvac', frequencyDays: 365, note: 'Schedule before first cold snap' },
+    { name: 'Clean gutters after leaf fall', category: 'exterior', frequencyDays: 180, note: 'Prevent ice dams from forming in winter' },
+    { name: 'Drain and store garden hoses', category: 'plumbing', frequencyDays: 365, note: 'Prevent pipes from freezing' },
+    { name: 'Check weatherstripping on doors', category: 'exterior', frequencyDays: 365, note: 'Seal drafts before heating season' },
+    { name: 'Test smoke and CO detectors', category: 'safety', frequencyDays: 180, note: 'Replace batteries at daylight saving time' },
+  ],
+  winter: [
+    { name: 'Check for ice dams on roof', category: 'exterior', frequencyDays: 90, note: 'Remove snow buildup to prevent water infiltration' },
+    { name: 'Insulate exposed pipes', category: 'plumbing', frequencyDays: 365, note: 'Prevent freezing in crawl spaces and garage' },
+    { name: 'Replace HVAC filter', category: 'hvac', frequencyDays: 90, note: 'Heating systems work harder in winter' },
+    { name: 'Test garage door auto-reverse', category: 'safety', frequencyDays: 180, note: 'Cold weather affects garage door mechanisms' },
+  ]
+};
+
+function checkSeasonalRefresh() {
+  const season = getSeason();
+  const lastKey = `tended_seasonal_${season}_${new Date().getFullYear()}`;
+  if (localStorage.getItem(lastKey)) return; // already shown this season
+  if (S.tier === 'free') return; // free users don't get seasonal refresh
+  setTimeout(() => openSeasonalModal(season, lastKey), 2000);
+}
+
+function openSeasonalModal(season, lastKey) {
+  const icons = { spring: '🌸', summer: '☀️', fall: '🍂', winter: '❄️' };
+  const tasks = SEASONAL_TASKS[season] || [];
+  document.getElementById('seasonalTitle').textContent = `${icons[season]} ${season.charAt(0).toUpperCase()+season.slice(1)} Check-in`;
+  
+  const taskHtml = tasks.map((t, i) => `
+    <label style="display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);cursor:pointer;align-items:flex-start;">
+      <input type="checkbox" id="st${i}" checked style="margin-top:3px;accent-color:var(--green);">
+      <div>
+        <div style="font-size:0.88rem;font-weight:500;">${t.name}</div>
+        <div style="font-size:0.75rem;color:var(--muted);">${t.note}</div>
+      </div>
+    </label>`).join('');
+
+  document.getElementById('seasonalContent').innerHTML = `
+    <p style="font-size:0.85rem;color:var(--muted);margin-bottom:16px;">It's ${season}! Here are some tasks to add to your schedule:</p>
+    ${taskHtml}
+    <button class="big-btn" style="margin-top:18px;" onclick="addSeasonalTasks(${JSON.stringify(tasks).replace(/"/g, '&quot;')}, '${lastKey}')">Add Selected Tasks →</button>
+    <button style="width:100%;background:none;border:none;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:0.82rem;cursor:pointer;margin-top:10px;" onclick="localStorage.setItem('${lastKey}','1');closeModal('seasonalModal');">Skip for now</button>`;
+  
+  openModal('seasonalModal');
+}
+
+async function addSeasonalTasks(tasks, lastKey) {
+  const btn = document.querySelector('#seasonalContent .big-btn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Adding...'; }
+  
+  let added = 0;
+  for (let i = 0; i < tasks.length; i++) {
+    const cb = document.getElementById('st' + i);
+    if (!cb?.checked) continue;
+    const t = tasks[i];
+    // Skip if task with same name already exists
+    if (S.allTasks.some(existing => existing.name.toLowerCase() === t.name.toLowerCase())) continue;
+    const task = makeTask(t.name, t.category, t.frequencyDays, t.note);
+    task.locked = false;
+    S.allTasks.push(task);
+    if (S.user) await syncTask(task);
+    added++;
+  }
+  
+  S.tasks = S.allTasks.filter(t => !t.locked);
+  localStorage.setItem(lastKey, '1');
+  closeModal('seasonalModal');
+  toast(added > 0 ? `${added} seasonal task${added>1?'s':''} added! 🌿` : 'No new tasks added.');
+  renderApp();
 }
 
 // ── SHARE LINKS ──
