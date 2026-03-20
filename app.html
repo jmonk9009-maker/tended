@@ -43,6 +43,8 @@ body {
 
 .screen { display: none; min-height: 100vh; flex-direction: column; }
 .screen.active { display: flex; }
+#screen-paywall { position: fixed; inset: 0; z-index: 200; overflow-y: auto; }
+.screen.active { display: flex; }
 
 /* SPLASH */
 #splash {
@@ -405,7 +407,7 @@ body {
 </div>
 
 <!-- PAYWALL SCREEN -->
-<div id="screen-paywall" class="screen" style="display:flex;flex-direction:column;min-height:100vh;background:var(--bg);">
+<div id="screen-paywall" class="screen" style="background:var(--bg);">
   <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 24px;text-align:center;">
     <div style="font-size:3rem;margin-bottom:16px;">🏠</div>
     <div style="font-family:'DM Sans',sans-serif;font-size:0.72rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--green);margin-bottom:12px;">Your schedule is ready</div>
@@ -862,8 +864,15 @@ async function saveTier(tier) {
 
 // ── SETUP / AI ──
 function show(id) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
+  document.querySelectorAll('.screen').forEach(s => { 
+    s.classList.remove('active'); 
+    s.style.display = 'none';
+  });
+  const el = document.getElementById(id);
+  if (el) { 
+    el.classList.add('active'); 
+    el.style.display = 'flex';
+  }
 }
 
 function pick(el) {
