@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Tended — Home Maintenance</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -580,6 +581,26 @@ let S = {
   syncing: false
 };
 
+// ── TASK COST ESTIMATES ──
+const TASK_COSTS = {
+  hvac: { min: 80, max: 300, diy: 15 },
+  plumbing: { min: 100, max: 400, diy: 20 },
+  exterior: { min: 50, max: 500, diy: 10 },
+  kitchen: { min: 30, max: 200, diy: 10 },
+  safety: { min: 10, max: 80, diy: 5 },
+  general: { min: 20, max: 200, diy: 10 },
+};
+
+function getYouTubeUrl(taskName) {
+  const query = encodeURIComponent(taskName + ' how to tutorial');
+  return `https://www.youtube.com/results?search_query=${query}`;
+}
+
+function getCostEstimate(category) {
+  const c = TASK_COSTS[category] || TASK_COSTS.general;
+  return { pro: `$${c.min}–$${c.max}`, diy: `~$${c.diy}` };
+}
+
 const CATS = {
   hvac:     { label:'HVAC',     icon:'🌀', color:'#4a90d9' },
   plumbing: { label:'Plumbing', icon:'🔧', color:'#5ba4b5' },
@@ -899,6 +920,39 @@ async function addBundles() {
   renderApp();
 }
 
+
+// ── TASK TIPS & COSTS ──
+const TASK_COSTS = {
+  hvac: { min: 80, max: 300, unit: 'service' },
+  plumbing: { min: 50, max: 500, unit: 'repair' },
+  exterior: { min: 100, max: 800, unit: 'project' },
+  kitchen: { min: 30, max: 200, unit: 'service' },
+  safety: { min: 5, max: 50, unit: 'check' },
+  general: { min: 20, max: 150, unit: 'task' },
+};
+
+function getTaskCost(category) {
+  const c = TASK_COSTS[category] || TASK_COSTS.general;
+  return `$${c.min}–$${c.max}`;
+}
+
+function getYouTubeUrl(taskName) {
+  return `https://www.youtube.com/results?search_query=${encodeURIComponent('how to ' + taskName + ' DIY')}`;
+}
+
+function getTaskTip(taskName, category) {
+  const cost = getTaskCost(category);
+  const ytUrl = getYouTubeUrl(taskName);
+  return `<div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">
+    <div style="display:inline-flex;align-items:center;gap:5px;background:var(--surface2);border-radius:8px;padding:6px 12px;font-size:0.75rem;color:var(--muted);">
+      💰 Typical cost: <strong style="color:var(--text);">${cost}</strong>
+    </div>
+    <a href="${ytUrl}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:5px;background:#ff000015;border-radius:8px;padding:6px 12px;font-size:0.75rem;color:#cc0000;text-decoration:none;font-weight:500;">
+      ▶ Watch tutorial
+    </a>
+  </div>`;
+}
+
 // ── TASKS ──
 function calcHealthScore(activeTasks) {
   if (!activeTasks.length) return 100;
@@ -1190,6 +1244,11 @@ function openDetail(id) {
         <span class="td-chip ${days<0?'r':'g'}">${fmtDue(task)}</span>
       </div>
       ${task.note?`<div style="margin-top:10px;font-size:0.8rem;color:var(--muted);font-style:italic;">${task.note}</div>`:''}
+      ${getTaskTip(task.name, task.category)}
+      <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;">
+        <a href="${getYouTubeUrl(task.name)}" target="_blank" style="display:inline-flex;align-items:center;gap:5px;background:#ff0000;color:#fff;border-radius:8px;padding:6px 12px;font-size:0.75rem;font-weight:600;text-decoration:none;">▶ Watch Tutorial</a>
+        <div style="display:inline-flex;align-items:center;gap:5px;background:var(--surface2);border-radius:8px;padding:6px 12px;font-size:0.75rem;color:var(--muted);">💰 Pro: ${getCostEstimate(task.category).pro} &nbsp;·&nbsp; DIY: ${getCostEstimate(task.category).diy}</div>
+      </div>
     </div>
     <div style="padding:18px 22px;">
       <button class="big-btn" onclick="openCompleteDialog('${String(task.id)}')">✓ Mark as Done</button>
@@ -1600,6 +1659,10 @@ function openProfile() {
       <div style="background:var(--surface2);border-radius:10px;padding:14px 16px;">
         <div style="font-weight:600;font-size:0.92rem;">${S.user?.email}</div>
         <div style="font-size:0.78rem;color:var(--muted);margin-top:4px;">Member since ${new Date(S.user?.created_at || Date.now()).toLocaleDateString('en-US',{month:'long',year:'numeric'})}</div>
+        <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
+          <div style="background:var(--green-light);border-radius:8px;padding:5px 12px;font-size:0.72rem;color:var(--green);font-weight:600;">${Math.floor((Date.now() - new Date(S.user?.created_at || Date.now())) / 86400000)} days tending 🌿</div>
+          <div style="background:var(--surface2);border-radius:8px;padding:5px 12px;font-size:0.72rem;color:var(--muted);">${S.allTasks.reduce((s,t)=>s+t.history.length,0)} completions</div>
+        </div>
       </div>
     </div>
 
