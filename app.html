@@ -404,6 +404,51 @@ body {
   </div>
 </div>
 
+<!-- PAYWALL SCREEN -->
+<div id="screen-paywall" class="screen" style="display:flex;flex-direction:column;min-height:100vh;background:var(--bg);">
+  <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 24px;text-align:center;">
+    <div style="font-size:3rem;margin-bottom:16px;">🌿</div>
+    <div style="font-family:'DM Sans',sans-serif;font-size:0.72rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--green);margin-bottom:12px;">Your schedule is ready</div>
+    <div style="font-family:var(--serif,serif);font-size:1.8rem;font-weight:600;line-height:1.2;margin-bottom:12px;color:var(--text);">Start your free<br><em style="color:var(--green);">14-day trial</em></div>
+    <div style="font-size:0.88rem;color:var(--muted);margin-bottom:32px;max-width:300px;line-height:1.6;">No charge today. Cancel anytime before your trial ends. Your AI-personalized schedule is waiting.</div>
+
+    <div style="width:100%;max-width:360px;display:grid;gap:10px;margin-bottom:20px;">
+      <button onclick="startTrial('home_monthly')" style="width:100%;background:var(--green);color:#fff;border:none;border-radius:14px;padding:16px 20px;font-family:'DM Sans',sans-serif;font-size:0.95rem;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:space-between;">
+        <div style="text-align:left;">
+          <div>Tended · $3.99/mo</div>
+          <div style="font-size:0.72rem;opacity:0.8;font-weight:400;margin-top:2px;">Full schedule · Unlimited tasks</div>
+        </div>
+        <span>→</span>
+      </button>
+      <button onclick="startTrial('pro_monthly')" style="width:100%;background:var(--gold);color:#fff;border:none;border-radius:14px;padding:16px 20px;font-family:'DM Sans',sans-serif;font-size:0.95rem;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:space-between;">
+        <div style="text-align:left;">
+          <div>Tended Pro · $6.99/mo</div>
+          <div style="font-size:0.72rem;opacity:0.8;font-weight:400;margin-top:2px;">+ Photos · Records · PDF export</div>
+        </div>
+        <span>→</span>
+      </button>
+      <button onclick="startTrial('home_annual')" style="width:100%;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:14px;padding:14px 20px;font-family:'DM Sans',sans-serif;font-size:0.88rem;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:space-between;">
+        <div style="text-align:left;">
+          <div>Tended Annual · $24.99/yr</div>
+          <div style="font-size:0.72rem;color:var(--muted);font-weight:400;margin-top:2px;">Save 48% vs monthly</div>
+        </div>
+        <span style="color:var(--muted);">→</span>
+      </button>
+      <button onclick="startTrial('pro_annual')" style="width:100%;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:14px;padding:14px 20px;font-family:'DM Sans',sans-serif;font-size:0.88rem;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:space-between;">
+        <div style="text-align:left;">
+          <div>Tended Pro Annual · $44.99/yr</div>
+          <div style="font-size:0.72rem;color:var(--muted);font-weight:400;margin-top:2px;">Best value · Save 46% vs monthly</div>
+        </div>
+        <span style="color:var(--muted);">→</span>
+      </button>
+    </div>
+
+    <div style="font-size:0.72rem;color:var(--muted);line-height:1.8;">
+      ✓ 14 days free · ✓ Cancel anytime · ✓ No charge until trial ends
+    </div>
+  </div>
+</div>
+
 <!-- MAIN APP -->
 <div id="screen-app" class="screen">
   <div class="app-head">
@@ -411,7 +456,6 @@ body {
       <div class="app-logo">ten<span>ded</span></div>
       <div class="hdr-btns">
         <div id="syncInd"><span class="sync-dot"></span></div>
-        <button class="icon-btn" onclick="openUpgrade()" title="Upgrade">🌿</button>
         <button class="icon-btn" onclick="openProfile()" title="Profile">👤</button>
       </div>
     </div>
@@ -508,7 +552,7 @@ body {
       <button class="btn btn-green" onclick="upgradeTo('home_monthly')">Start Tended — $3.99/mo →</button>
       <button class="btn" style="background:var(--gold);color:#fff;" onclick="upgradeTo('pro_monthly')">Start Tended Pro — $6.99/mo →</button>
       <button class="btn btn-surface" style="font-size:0.78rem;" onclick="upgradeTo('home_annual')">Annual plans: Tended $24.99/yr · Pro $44.99/yr</button>
-      <button class="btn btn-surface" onclick="closeModal('upgradeModal')">Maybe later</button>
+      <button class="btn btn-surface" onclick="closeModal('upgradeModal')">Not now</button>
     </div>
   </div>
 </div>
@@ -634,10 +678,14 @@ async function boot() {
       S.user = session.user;
       const isNewUser = await loadData();
       if (!isNewUser) {
-        show('screen-app');
-        renderApp();
-        if (shouldShowPushPrompt()) initPush();
-        checkSeasonalRefresh();
+        if (S.tier === 'free' && S.allTasks.length > 0) {
+          show('screen-paywall');
+        } else {
+          show('screen-app');
+          renderApp();
+          if (shouldShowPushPrompt()) initPush();
+          checkSeasonalRefresh();
+        }
       }
     } else if (evt === 'SIGNED_OUT') {
       _lastUserId = null;
@@ -911,13 +959,40 @@ async function addBundles() {
   S.aiBundles.forEach(b => {
     if (S.selBundles.has(b.id)) b.tasks.forEach(t => allTasks.push(makeTask(t.name, t.category, t.frequencyDays, t.note)));
   });
-  // First FREE_TASK_LIMIT are unlocked, rest are locked
-  allTasks.forEach((t, i) => { t.locked = i >= FREE_TASK_LIMIT; });
+  // All tasks unlocked — no free tier anymore
+  allTasks.forEach(t => { t.locked = false; });
   S.allTasks = allTasks;
-  applyTierToTasks();
   if (S.user) { for (const t of S.allTasks) await syncTask(t); }
-  show('screen-app');
-  renderApp();
+
+  // If already paid, go straight to app
+  if (S.tier === 'home' || S.tier === 'pro') {
+    show('screen-app');
+    renderApp();
+    checkSeasonalRefresh();
+  } else {
+    // Show paywall
+    show('screen-paywall');
+  }
+}
+
+async function startTrial(plan) {
+  if (!S.user) return;
+  const priceId = STRIPE_PRICES[plan];
+  const btn = event?.target?.closest('button');
+  if (btn) { btn.disabled = true; btn.textContent = 'Loading...'; }
+  try {
+    const res = await fetch(`${SURL}/functions/v1/create-checkout`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SKEY}` },
+      body: JSON.stringify({ priceId, userId: S.user.id, userEmail: S.user.email })
+    });
+    const { url, error } = await res.json();
+    if (error) throw new Error(error);
+    window.location.href = url;
+  } catch(err) {
+    toast('Something went wrong. Please try again.');
+    if (btn) { btn.disabled = false; btn.textContent = 'Try Again'; }
+  }
 }
 
 
@@ -1771,8 +1846,11 @@ async function deleteAccount() {
 
 // Check for successful upgrade redirect
 if (window.location.search.includes('upgraded=true')) {
-  window.history.replaceState({}, '', '/');
-  setTimeout(() => toast('🎉 Welcome to your new plan!'), 1000);
+  window.history.replaceState({}, '', '/app');
+  setTimeout(() => {
+    toast('🎉 Welcome to Tended! Your 14-day trial has started.');
+    if (S.allTasks.length > 0) { show('screen-app'); renderApp(); }
+  }, 1500);
 }
 function openModal(id) { document.getElementById(id).classList.add('open'); }
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
