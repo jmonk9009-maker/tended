@@ -444,7 +444,14 @@ body {
       </button>
     </div>
 
-    <div style="font-size:0.72rem;color:var(--muted);line-height:1.8;">
+    <div style="width:100%;max-width:360px;margin-top:8px;">
+      <div style="display:flex;gap:8px;">
+        <input id="promoCodeInput" type="text" placeholder="Promo code" style="flex:1;background:var(--surface);border:2px solid var(--border);border-radius:10px;padding:11px 14px;font-family:'DM Sans',sans-serif;font-size:0.88rem;color:var(--text);outline:none;text-transform:uppercase;" oninput="this.value=this.value.toUpperCase()">
+        <button onclick="applyPromoCode()" style="background:var(--surface2);border:none;border-radius:10px;padding:11px 18px;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:600;cursor:pointer;color:var(--text);white-space:nowrap;">Apply</button>
+      </div>
+      <div id="promoMsg" style="font-size:0.75rem;margin-top:6px;display:none;"></div>
+    </div>
+    <div style="font-size:0.72rem;color:var(--muted);line-height:1.8;margin-top:8px;">
       ✓ 14 days free · ✓ Cancel anytime · ✓ No charge until trial ends
     </div>
   </div>
@@ -1534,6 +1541,27 @@ async function addBundles() {
   }
 }
 
+let _appliedPromoCode = '';
+
+function applyPromoCode() {
+  const code = document.getElementById('promoCodeInput')?.value?.trim().toUpperCase();
+  const msg = document.getElementById('promoMsg');
+  if (!code) return;
+  
+  // Validate known codes client-side for UX
+  const validCodes = ['MONK26'];
+  if (validCodes.includes(code)) {
+    _appliedPromoCode = code;
+    msg.style.display = 'block';
+    msg.style.color = 'var(--green)';
+    msg.textContent = '✓ Promo code applied! Your discount will be applied at checkout.';
+  } else {
+    msg.style.display = 'block';
+    msg.style.color = 'var(--red)';
+    msg.textContent = '✗ Invalid promo code. Please check and try again.';
+  }
+}
+
 async function startTrial(plan) {
   if (!S.user) return;
   const priceId = STRIPE_PRICES[plan];
@@ -1543,7 +1571,7 @@ async function startTrial(plan) {
     const res = await fetch(`${SURL}/functions/v1/create-checkout`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SKEY}` },
-      body: JSON.stringify({ priceId, userId: S.user.id, userEmail: S.user.email })
+      body: JSON.stringify({ priceId, userId: S.user.id, userEmail: S.user.email, promoCode: _appliedPromoCode || null })
     });
     const { url, error } = await res.json();
     if (error) throw new Error(error);
