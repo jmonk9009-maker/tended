@@ -3,6 +3,11 @@
     { "source": "/app", "destination": "/app.html" },
     { "source": "/share/:token", "destination": "/share.html" },
     { "source": "/terms", "destination": "/terms.html" },
-    { "source": "/privacy", "destination": "/privacy.html" }
+    { "source": "/privacy", "destination": "/privacy.html" },
+    { "source": "/beta", "destination": "/beta.html" }
+  ],
+  "redirects": [
+    { "source": "/blog", "destination": "https://app.usetended.com/blog", "permanent": false },
+    { "source": "/blog.html", "destination": "https://app.usetended.com/blog", "permanent": false }
   ]
 }
