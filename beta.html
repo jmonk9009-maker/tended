@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Beta Tester Signup — Tended</title>
+  <meta name="description" content="Apply to become a Tended beta tester. Limited to 20 spots. Get 90 days of Premium free and Founding Member status.">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=2">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --navy: #1B2B4B;
+      --navy-dark: #0D1626;
+      --off-white: #F8F7F4;
+      --gold: #C4962A;
+      --gold-light: #E8C46A;
+    }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--navy-dark);
+      color: var(--off-white);
+      font-family: 'DM Sans', system-ui, sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Nav */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      padding: 24px 40px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .nav-logo {
+      display: inline-flex;
+      align-items: flex-end;
+      gap: 7px;
+      text-decoration: none;
+    }
+    .nav-logo-text {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--off-white);
+      letter-spacing: -0.01em;
+      line-height: 1;
+    }
+    .nav-signin {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.65rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: rgba(248,247,244,0.5);
+      text-decoration: none;
+      transition: color 0.15s;
+    }
+    .nav-signin:hover { color: rgba(248,247,244,0.9); }
+
+    /* Page layout */
+    .page-wrap {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 120px 24px 80px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Header */
+    .page-eyebrow {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.68rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 20px;
+      opacity: 0;
+      animation: fadeUp 0.6s ease 0.1s forwards;
+    }
+    .page-title {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: clamp(2.2rem, 5vw, 3.8rem);
+      font-weight: 700;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+      color: var(--off-white);
+      text-align: center;
+      max-width: 700px;
+      margin-bottom: 16px;
+      opacity: 0;
+      animation: fadeUp 0.7s ease 0.2s forwards;
+    }
+    .page-title em {
+      font-style: italic;
+      font-weight: 400;
+      color: var(--gold-light);
+    }
+    .page-sub {
+      font-size: clamp(0.9rem, 2vw, 1.05rem);
+      color: rgba(248,247,244,0.6);
+      max-width: 500px;
+      line-height: 1.7;
+      text-align: center;
+      font-weight: 300;
+      margin-bottom: 32px;
+      opacity: 0;
+      animation: fadeUp 0.7s ease 0.3s forwards;
+    }
+
+    /* Slot counter badge */
+    .slot-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(196,150,42,0.12);
+      border: 1px solid rgba(196,150,42,0.3);
+      border-radius: 100px;
+      padding: 8px 20px;
+      margin-bottom: 40px;
+      opacity: 0;
+      animation: fadeUp 0.7s ease 0.4s forwards;
+    }
+    .slot-badge-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--gold);
+      flex-shrink: 0;
+    }
+    .slot-badge-dot.full { background: rgba(248,247,244,0.3); }
+    .slot-badge-text {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.68rem;
+      letter-spacing: 0.08em;
+      color: var(--gold-light);
+    }
+    .slot-badge-text.full { color: rgba(248,247,244,0.4); }
+
+    /* Info card */
+    .info-card {
+      background: rgba(27,43,75,0.35);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 12px;
+      padding: 28px 32px;
+      max-width: 620px;
+      width: 100%;
+      margin-bottom: 32px;
+      opacity: 0;
+      animation: fadeUp 0.7s ease 0.45s forwards;
+    }
+    .info-card-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--off-white);
+      margin-bottom: 12px;
+    }
+    .info-card p {
+      font-size: 0.85rem;
+      color: rgba(248,247,244,0.55);
+      line-height: 1.75;
+      margin-bottom: 14px;
+    }
+    .info-card p:last-child { margin-bottom: 0; }
+    .info-perks {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 4px;
+    }
+    .info-perk {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      font-size: 0.83rem;
+      color: rgba(248,247,244,0.6);
+      line-height: 1.5;
+    }
+    .perk-check {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--gold);
+      margin-top: 1px;
+      flex-shrink: 0;
+    }
+
+    /* Form card */
+    .form-card {
+      background: rgba(27,43,75,0.4);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 16px;
+      padding: 40px 40px;
+      max-width: 620px;
+      width: 100%;
+      opacity: 0;
+      animation: fadeUp 0.7s ease 0.55s forwards;
+    }
+    .form-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--off-white);
+      margin-bottom: 28px;
+    }
+    .form-group {
+      margin-bottom: 20px;
+    }
+    .form-label {
+      display: block;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.62rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: rgba(248,247,244,0.45);
+      margin-bottom: 8px;
+    }
+    .form-input,
+    .form-select {
+      width: 100%;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 8px;
+      padding: 13px 16px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.9rem;
+      color: var(--off-white);
+      outline: none;
+      transition: border-color 0.15s, background 0.15s;
+      appearance: none;
+      -webkit-appearance: none;
+    }
+    .form-input::placeholder { color: rgba(248,247,244,0.2); }
+    .form-input:focus,
+    .form-select:focus {
+      border-color: rgba(196,150,42,0.5);
+      background: rgba(255,255,255,0.07);
+    }
+    .form-select {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='rgba(248,247,244,0.3)' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
+      padding-right: 40px;
+      cursor: pointer;
+    }
+    .form-select option {
+      background: #1B2B4B;
+      color: var(--off-white);
+    }
+    .btn-submit {
+      width: 100%;
+      background: var(--gold);
+      color: var(--navy-dark);
+      border: none;
+      border-radius: 10px;
+      padding: 16px 32px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s;
+      margin-top: 8px;
+    }
+    .btn-submit:hover:not(:disabled) {
+      background: var(--gold-light);
+      transform: translateY(-1px);
+    }
+    .btn-submit:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* Error / success messages */
+    .form-error {
+      background: rgba(140,26,26,0.2);
+      border: 1px solid rgba(224,128,128,0.3);
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-size: 0.83rem;
+      color: #F4AAAA;
+      margin-top: 16px;
+      display: none;
+    }
+    .form-success {
+      text-align: center;
+      padding: 32px 24px;
+    }
+    .form-success-icon {
+      font-size: 2.5rem;
+      margin-bottom: 16px;
+    }
+    .form-success-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.4rem;
+      font-weight: 600;
+      color: var(--off-white);
+      margin-bottom: 10px;
+    }
+    .form-success-sub {
+      font-size: 0.88rem;
+      color: rgba(248,247,244,0.5);
+      line-height: 1.7;
+      max-width: 380px;
+      margin: 0 auto;
+    }
+
+    /* Closed / waitlist state */
+    .waitlist-banner {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 10px;
+      padding: 14px 20px;
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .waitlist-banner-text {
+      font-size: 0.83rem;
+      color: rgba(248,247,244,0.5);
+      line-height: 1.5;
+    }
+    .waitlist-banner-text strong {
+      color: var(--off-white);
+      font-weight: 600;
+    }
+
+    /* Loading skeleton */
+    .skeleton {
+      display: inline-block;
+      width: 120px;
+      height: 14px;
+      background: rgba(255,255,255,0.07);
+      border-radius: 4px;
+      animation: pulse 1.5s ease-in-out infinite;
+      vertical-align: middle;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 0.5; }
+      50% { opacity: 1; }
+    }
+
+    /* Footer */
+    footer {
+      padding: 32px 40px;
+      border-top: 1px solid rgba(255,255,255,0.05);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: relative;
+      z-index: 1;
+    }
+    .footer-logo {
+      display: inline-flex;
+      align-items: flex-end;
+      gap: 6px;
+      font-family: 'Playfair Display', serif;
+      font-size: 1rem;
+      font-weight: 700;
+      color: rgba(248,247,244,0.4);
+    }
+    .footer-links { display: flex; gap: 24px; }
+    .footer-links a {
+      font-size: 0.75rem;
+      color: rgba(248,247,244,0.3);
+      text-decoration: none;
+    }
+    .footer-links a:hover { color: rgba(248,247,244,0.6); }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 640px) {
+      nav { padding: 20px 24px; }
+      .page-wrap { padding: 100px 20px 60px; }
+      .form-card { padding: 28px 24px; }
+      .info-card { padding: 22px 20px; }
+      footer { flex-direction: column; gap: 16px; text-align: center; }
+      .footer-links { justify-content: center; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="/" class="nav-logo">
+    <svg width="26" height="26" viewBox="0 0 49 49" style="overflow:visible;margin-bottom:3px;">
+      <g transform="scale(3.5)">
+        <circle cx="12.5" cy="12" r="1" fill="#F8F7F4"/>
+        <polyline points="2,9.05 5.818,12.875 14,4.693" fill="none" stroke="#F8F7F4" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/>
+      </g>
+    </svg>
+    <span class="nav-logo-text">Tended<sup style="font-size:0.5em;opacity:0.5;vertical-align:super;">&trade;</sup></span>
+  </a>
+  <a href="https://app.usetended.com/tools" class="nav-signin" style="margin-right:16px;">Free Tools</a>
+  <a href="https://app.usetended.com/auth/login" class="nav-signin">Sign In</a>
+</nav>
+
+<div class="page-wrap">
+
+  <div class="page-eyebrow">Limited Beta Program</div>
+
+  <h1 class="page-title" id="page-title">Become a Tended<br><em>Beta Tester</em></h1>
+
+  <p class="page-sub" id="page-sub">
+    Limited to 20 testers. Help shape the platform and get 90 days of Premium free.
+  </p>
+
+  <div class="slot-badge" id="slot-badge">
+    <div class="slot-badge-dot" id="slot-dot"></div>
+    <span class="slot-badge-text" id="slot-text"><span class="skeleton"></span></span>
+  </div>
+
+  <!-- OPEN STATE -->
+  <div id="open-state" style="display:none;width:100%;max-width:620px;">
+
+    <div class="info-card">
+      <div class="info-card-title">What this beta program involves</div>
+      <p>
+        This is a real beta program. You will use Tended on an actual vehicle, home, boat, or RV
+        that you own or manage. Your job is to log maintenance as you normally would and report any
+        bugs you find — with a screenshot and a short description of what happened.
+      </p>
+      <p>
+        We are looking for people who will actually use the app, not just sign up. If you spot
+        something broken, we want to hear about it through the feedback form.
+      </p>
+      <div class="info-perks">
+        <div class="info-perk">
+          <span class="perk-check">&#10003;</span>
+          <span>90 days of Tended Premium, completely free</span>
+        </div>
+        <div class="info-perk">
+          <span class="perk-check">&#10003;</span>
+          <span>Founding Member status on your account permanently</span>
+        </div>
+        <div class="info-perk">
+          <span class="perk-check">&#10003;</span>
+          <span>Direct influence on what gets built next</span>
+        </div>
+        <div class="info-perk">
+          <span class="perk-check">&#10003;</span>
+          <span>A dedicated feedback channel to report bugs as you find them</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-card" id="signup-form-card">
+      <div id="signup-form-content">
+        <div class="form-title">Apply for Beta</div>
+        <form id="signup-form" novalidate>
+
+          <div class="form-group">
+            <label class="form-label" for="sf-name">Full name</label>
+            <input class="form-input" type="text" id="sf-name" name="full_name" placeholder="Your full name" autocomplete="name" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="sf-email">Email address</label>
+            <input class="form-input" type="email" id="sf-email" name="email" placeholder="you@example.com" autocomplete="email" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="sf-asset">What will you be tracking?</label>
+            <select class="form-select" id="sf-asset" name="asset_type" required>
+              <option value="" disabled selected>Select an asset type</option>
+              <option value="Vehicle">Vehicle</option>
+              <option value="Home">Home</option>
+              <option value="Boat/RV">Boat / RV</option>
+              <option value="Multiple">Multiple</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="sf-tech">Your comfort level with apps</label>
+            <select class="form-select" id="sf-tech" name="tech_comfort" required>
+              <option value="" disabled selected>Select your comfort level</option>
+              <option value="Not very tech savvy">Not very tech savvy</option>
+              <option value="Somewhat comfortable with apps">Somewhat comfortable with apps</option>
+              <option value="Very comfortable with apps">Very comfortable with apps</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="sf-referral">How did you hear about Tended?</label>
+            <select class="form-select" id="sf-referral" name="referral_source" required>
+              <option value="" disabled selected>Select one</option>
+              <option value="Facebook">Facebook</option>
+              <option value="Instagram">Instagram</option>
+              <option value="TikTok">TikTok</option>
+              <option value="Friend or Family">Friend or Family</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+
+          <div class="form-error" id="signup-error"></div>
+
+          <button type="submit" class="btn-submit" id="signup-btn">Apply for Beta</button>
+
+        </form>
+      </div>
+
+      <div class="form-success" id="signup-success" style="display:none;">
+        <div class="form-success-icon">&#10003;</div>
+        <div class="form-success-title">Application received</div>
+        <p class="form-success-sub">
+          Thanks for applying. We will review your application and reach out with next steps.
+          Keep an eye on your inbox.
+        </p>
+      </div>
+    </div>
+
+  </div><!-- /open-state -->
+
+  <!-- CLOSED STATE -->
+  <div id="closed-state" style="display:none;width:100%;max-width:620px;">
+
+    <div class="form-card">
+      <div id="waitlist-form-content">
+
+        <div class="waitlist-banner">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(248,247,244,0.35)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          <div class="waitlist-banner-text">
+            <strong>Beta is currently full.</strong> All 20 spots have been claimed.
+          </div>
+        </div>
+
+        <div class="form-title">Join the Waitlist</div>
+        <p style="font-size:0.85rem;color:rgba(248,247,244,0.5);line-height:1.7;margin-bottom:24px;">
+          Leave your email and we will notify you when the next beta opens.
+        </p>
+
+        <form id="waitlist-form" novalidate>
+          <div class="form-group">
+            <label class="form-label" for="wf-name">Full name</label>
+            <input class="form-input" type="text" id="wf-name" name="full_name" placeholder="Your full name" autocomplete="name" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="wf-email">Email address</label>
+            <input class="form-input" type="email" id="wf-email" name="email" placeholder="you@example.com" autocomplete="email" required>
+          </div>
+
+          <div class="form-error" id="waitlist-error"></div>
+
+          <button type="submit" class="btn-submit" id="waitlist-btn">Join Waitlist</button>
+        </form>
+
+      </div>
+
+      <div class="form-success" id="waitlist-success" style="display:none;">
+        <div class="form-success-icon">&#9998;</div>
+        <div class="form-success-title">You're on the list</div>
+        <p class="form-success-sub">
+          We will notify you when the next beta opens up. Thanks for your interest in Tended.
+        </p>
+      </div>
+    </div>
+
+  </div><!-- /closed-state -->
+
+</div><!-- /page-wrap -->
+
+<footer>
+  <div class="footer-logo">Tended</div>
+  <div class="footer-links">
+    <a href="https://app.usetended.com/terms">Terms</a>
+    <a href="https://app.usetended.com/privacy">Privacy</a>
+    <a href="mailto:support@usetended.com">Contact</a>
+  </div>
+</footer>
+
+<script>
+  const SURL = 'https://rkivkfmvykegnojlblpd.supabase.co';
+  const SKEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJraXZrZm12eWtlZ25vamxibHBkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM3MjI5NDUsImV4cCI6MjA4OTI5ODk0NX0.EaGsMcSO_bsMJ4YAHtBc6bc75soR_100FbA1lUys3hY';
+  const sb = supabase.createClient(SURL, SKEY);
+
+  const MAX_SLOTS = 20;
+
+  async function initPage() {
+    try {
+      const { count, error } = await sb
+        .from('beta_signups')
+        .select('*', { count: 'exact', head: true });
+
+      if (error) throw error;
+
+      const taken = count || 0;
+      const remaining = Math.max(0, MAX_SLOTS - taken);
+      const isFull = taken >= MAX_SLOTS;
+
+      // Update slot badge
+      const dot = document.getElementById('slot-dot');
+      const text = document.getElementById('slot-text');
+      if (isFull) {
+        dot.classList.add('full');
+        text.classList.add('full');
+        text.textContent = 'Beta is currently full';
+      } else {
+        text.textContent = remaining + ' of ' + MAX_SLOTS + ' spots remaining';
+      }
+
+      // Show correct state
+      if (isFull) {
+        document.getElementById('closed-state').style.display = 'block';
+        document.getElementById('page-sub').textContent =
+          'All 20 beta spots are filled. Join the waitlist and we will notify you when the next beta opens.';
+      } else {
+        document.getElementById('open-state').style.display = 'block';
+      }
+
+    } catch (err) {
+      // On error, default to showing the open form so users are not blocked
+      document.getElementById('slot-text').textContent = 'Spots available';
+      document.getElementById('open-state').style.display = 'block';
+    }
+  }
+
+  // --- Signup form ---
+  document.getElementById('signup-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    const btn = document.getElementById('signup-btn');
+    const errEl = document.getElementById('signup-error');
+    errEl.style.display = 'none';
+
+    const name = document.getElementById('sf-name').value.trim();
+    const email = document.getElementById('sf-email').value.trim();
+    const asset = document.getElementById('sf-asset').value;
+    const tech = document.getElementById('sf-tech').value;
+    const referral = document.getElementById('sf-referral').value;
+
+    if (!name || !email || !asset || !tech || !referral) {
+      errEl.textContent = 'Please fill in all fields before submitting.';
+      errEl.style.display = 'block';
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      errEl.textContent = 'Please enter a valid email address.';
+      errEl.style.display = 'block';
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Submitting…';
+
+    try {
+      // Re-check slot count to prevent race-condition overfill
+      const { count: currentCount } = await sb
+        .from('beta_signups')
+        .select('*', { count: 'exact', head: true });
+
+      if ((currentCount || 0) >= MAX_SLOTS) {
+        // Slots filled since page loaded — reset button and switch to waitlist view
+        btn.disabled = false;
+        btn.textContent = 'Apply for Beta';
+        document.getElementById('open-state').style.display = 'none';
+        document.getElementById('closed-state').style.display = 'block';
+        const dot = document.getElementById('slot-dot');
+        const slotText = document.getElementById('slot-text');
+        dot.classList.add('full');
+        slotText.classList.add('full');
+        slotText.textContent = 'Beta is currently full';
+        return;
+      }
+
+      const { error } = await sb.from('beta_signups').insert([{
+        full_name: name,
+        email: email,
+        asset_type: asset,
+        tech_comfort: tech,
+        referral_source: referral
+      }]);
+
+      if (error) throw error;
+
+      document.getElementById('signup-form-content').style.display = 'none';
+      document.getElementById('signup-success').style.display = 'block';
+
+    } catch (err) {
+      errEl.textContent = 'Something went wrong. Please try again in a moment.';
+      errEl.style.display = 'block';
+      btn.disabled = false;
+      btn.textContent = 'Apply for Beta';
+    }
+  });
+
+  // --- Waitlist form ---
+  document.getElementById('waitlist-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    const btn = document.getElementById('waitlist-btn');
+    const errEl = document.getElementById('waitlist-error');
+    errEl.style.display = 'none';
+
+    const name = document.getElementById('wf-name').value.trim();
+    const email = document.getElementById('wf-email').value.trim();
+
+    if (!name || !email) {
+      errEl.textContent = 'Please fill in all fields before submitting.';
+      errEl.style.display = 'block';
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      errEl.textContent = 'Please enter a valid email address.';
+      errEl.style.display = 'block';
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Submitting…';
+
+    try {
+      const { error } = await sb.from('beta_waitlist').insert([{
+        full_name: name,
+        email: email
+      }]);
+
+      if (error) throw error;
+
+      document.getElementById('waitlist-form-content').style.display = 'none';
+      document.getElementById('waitlist-success').style.display = 'block';
+
+    } catch (err) {
+      errEl.textContent = 'Something went wrong. Please try again in a moment.';
+      errEl.style.display = 'block';
+      btn.disabled = false;
+      btn.textContent = 'Join Waitlist';
+    }
+  });
+
+  initPage();
+</script>
+
+</body>
+</html>

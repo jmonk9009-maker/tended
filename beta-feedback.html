@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Beta Feedback — Tended</title>
+  <meta name="description" content="Report a bug or share feedback with the Tended beta team.">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=2">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --navy: #1B2B4B;
+      --navy-dark: #0D1626;
+      --off-white: #F8F7F4;
+      --gold: #C4962A;
+      --gold-light: #E8C46A;
+    }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--navy-dark);
+      color: var(--off-white);
+      font-family: 'DM Sans', system-ui, sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Minimal header */
+    .page-header {
+      padding: 32px 40px 0;
+      position: relative;
+      z-index: 1;
+    }
+    .header-logo {
+      display: inline-flex;
+      align-items: flex-end;
+      gap: 7px;
+      text-decoration: none;
+    }
+    .header-logo-text {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--off-white);
+      letter-spacing: -0.01em;
+      line-height: 1;
+    }
+
+    /* Page layout */
+    .page-wrap {
+      max-width: 660px;
+      margin: 0 auto;
+      padding: 56px 24px 80px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Header block */
+    .page-eyebrow {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.68rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 16px;
+      opacity: 0;
+      animation: fadeUp 0.6s ease 0.05s forwards;
+    }
+    .page-title {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: clamp(2rem, 4.5vw, 3rem);
+      font-weight: 700;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+      color: var(--off-white);
+      margin-bottom: 14px;
+      opacity: 0;
+      animation: fadeUp 0.7s ease 0.15s forwards;
+    }
+    .page-title em {
+      font-style: italic;
+      font-weight: 400;
+      color: var(--gold-light);
+    }
+    .page-intro {
+      font-size: 0.92rem;
+      color: rgba(248,247,244,0.55);
+      line-height: 1.75;
+      max-width: 520px;
+      margin-bottom: 40px;
+      font-weight: 300;
+      opacity: 0;
+      animation: fadeUp 0.7s ease 0.25s forwards;
+    }
+
+    /* Form card */
+    .form-card {
+      background: rgba(27,43,75,0.4);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 16px;
+      padding: 40px;
+      opacity: 0;
+      animation: fadeUp 0.7s ease 0.35s forwards;
+    }
+
+    .form-group { margin-bottom: 22px; }
+    .form-label {
+      display: block;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.62rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: rgba(248,247,244,0.45);
+      margin-bottom: 8px;
+    }
+    .form-label-hint {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.72rem;
+      color: rgba(248,247,244,0.3);
+      text-transform: none;
+      letter-spacing: 0;
+      margin-left: 6px;
+    }
+    .form-input,
+    .form-textarea,
+    .form-select {
+      width: 100%;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 8px;
+      padding: 13px 16px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.9rem;
+      color: var(--off-white);
+      outline: none;
+      transition: border-color 0.15s, background 0.15s;
+      appearance: none;
+      -webkit-appearance: none;
+    }
+    .form-input::placeholder,
+    .form-textarea::placeholder { color: rgba(248,247,244,0.2); }
+    .form-input:focus,
+    .form-textarea:focus,
+    .form-select:focus {
+      border-color: rgba(196,150,42,0.5);
+      background: rgba(255,255,255,0.07);
+    }
+    .form-textarea {
+      resize: vertical;
+      min-height: 110px;
+      line-height: 1.6;
+    }
+    .form-select {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='rgba(248,247,244,0.3)' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
+      padding-right: 40px;
+      cursor: pointer;
+    }
+    .form-select option {
+      background: #1B2B4B;
+      color: var(--off-white);
+    }
+
+    /* Star rating */
+    .star-group {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+    .star-group input[type="radio"] { display: none; }
+    .star-group label {
+      cursor: pointer;
+      font-size: 1.8rem;
+      color: rgba(255,255,255,0.15);
+      transition: color 0.12s, transform 0.1s;
+      line-height: 1;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    .star-group label:hover,
+    .star-group label:hover ~ label { color: rgba(255,255,255,0.15); }
+    .star-group:hover label { color: var(--gold-light); }
+    .star-group label:hover ~ label { color: rgba(255,255,255,0.15) !important; }
+    .star-group input[type="radio"]:checked ~ label { color: rgba(255,255,255,0.15); }
+    .star-group input[type="radio"]:checked + label,
+    .star-group input[type="radio"]:checked + label ~ label { color: rgba(255,255,255,0.15); }
+
+    /* Reversed star rating trick: stars are in reverse DOM order, displayed RTL */
+    .star-rating {
+      display: flex;
+      flex-direction: row-reverse;
+      gap: 4px;
+      width: fit-content;
+    }
+    .star-rating input[type="radio"] { display: none; }
+    .star-rating label {
+      cursor: pointer;
+      font-size: 2rem;
+      color: rgba(255,255,255,0.15);
+      transition: color 0.1s;
+      line-height: 1;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    /* Highlight hovered star and all stars before it (which are after it in DOM) */
+    .star-rating label:hover,
+    .star-rating label:hover ~ label {
+      color: var(--gold-light);
+    }
+    /* Highlight selected star and all before it */
+    .star-rating input[type="radio"]:checked ~ label,
+    .star-rating input[type="radio"]:checked + label {
+      color: var(--gold-light);
+    }
+    /* When hovering, override checked state visually */
+    .star-rating:hover input[type="radio"]:checked ~ label {
+      color: rgba(255,255,255,0.15);
+    }
+    .star-rating:hover label:hover,
+    .star-rating:hover label:hover ~ label {
+      color: var(--gold-light);
+    }
+    .star-rating-wrap {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .star-rating-label-text {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.65rem;
+      letter-spacing: 0.06em;
+      color: rgba(248,247,244,0.3);
+      min-width: 60px;
+    }
+
+    /* Screenshot upload */
+    .file-upload-wrap {
+      position: relative;
+    }
+    .file-upload-input {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+      width: 100%;
+      height: 100%;
+      z-index: 2;
+    }
+    .file-upload-box {
+      border: 1px dashed rgba(255,255,255,0.15);
+      border-radius: 8px;
+      padding: 24px 20px;
+      text-align: center;
+      background: rgba(255,255,255,0.03);
+      transition: border-color 0.15s, background 0.15s;
+      cursor: pointer;
+    }
+    .file-upload-wrap:hover .file-upload-box,
+    .file-upload-wrap.has-file .file-upload-box {
+      border-color: rgba(196,150,42,0.4);
+      background: rgba(196,150,42,0.05);
+    }
+    .file-upload-icon {
+      font-size: 1.4rem;
+      margin-bottom: 8px;
+      opacity: 0.4;
+    }
+    .file-upload-text {
+      font-size: 0.82rem;
+      color: rgba(248,247,244,0.4);
+      line-height: 1.5;
+    }
+    .file-upload-text strong {
+      color: rgba(248,247,244,0.7);
+      font-weight: 500;
+    }
+    .file-upload-name {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--gold-light);
+      margin-top: 6px;
+      display: none;
+    }
+    .file-upload-wrap.has-file .file-upload-name { display: block; }
+
+    /* Upload progress */
+    .upload-progress {
+      margin-top: 8px;
+      height: 3px;
+      background: rgba(255,255,255,0.06);
+      border-radius: 2px;
+      overflow: hidden;
+      display: none;
+    }
+    .upload-progress-bar {
+      height: 100%;
+      background: var(--gold);
+      width: 0%;
+      transition: width 0.3s ease;
+      border-radius: 2px;
+    }
+
+    /* Submit button */
+    .btn-submit {
+      width: 100%;
+      background: var(--gold);
+      color: var(--navy-dark);
+      border: none;
+      border-radius: 10px;
+      padding: 16px 32px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s;
+      margin-top: 8px;
+    }
+    .btn-submit:hover:not(:disabled) {
+      background: var(--gold-light);
+      transform: translateY(-1px);
+    }
+    .btn-submit:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* Divider */
+    .form-divider {
+      height: 1px;
+      background: rgba(255,255,255,0.06);
+      margin: 28px 0;
+    }
+
+    /* Error / success */
+    .form-error {
+      background: rgba(140,26,26,0.2);
+      border: 1px solid rgba(224,128,128,0.3);
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-size: 0.83rem;
+      color: #F4AAAA;
+      margin-top: 16px;
+      display: none;
+    }
+    .form-success {
+      text-align: center;
+      padding: 48px 24px;
+    }
+    .form-success-icon {
+      font-size: 3rem;
+      margin-bottom: 20px;
+    }
+    .form-success-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.6rem;
+      font-weight: 600;
+      color: var(--off-white);
+      margin-bottom: 12px;
+    }
+    .form-success-sub {
+      font-size: 0.88rem;
+      color: rgba(248,247,244,0.5);
+      line-height: 1.75;
+      max-width: 380px;
+      margin: 0 auto 24px;
+    }
+    .btn-another {
+      background: rgba(255,255,255,0.07);
+      color: var(--off-white);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 8px;
+      padding: 10px 22px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .btn-another:hover { background: rgba(255,255,255,0.11); }
+
+    /* Footer */
+    footer {
+      padding: 32px 40px;
+      border-top: 1px solid rgba(255,255,255,0.05);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: relative;
+      z-index: 1;
+    }
+    .footer-logo {
+      font-family: 'Playfair Display', serif;
+      font-size: 1rem;
+      font-weight: 700;
+      color: rgba(248,247,244,0.4);
+    }
+    .footer-links { display: flex; gap: 24px; }
+    .footer-links a {
+      font-size: 0.75rem;
+      color: rgba(248,247,244,0.3);
+      text-decoration: none;
+    }
+    .footer-links a:hover { color: rgba(248,247,244,0.6); }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 640px) {
+      .page-header { padding: 24px 20px 0; }
+      .page-wrap { padding: 40px 20px 60px; }
+      .form-card { padding: 28px 20px; }
+      footer { flex-direction: column; gap: 16px; text-align: center; }
+      .footer-links { justify-content: center; }
+      .star-rating label { font-size: 1.7rem; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="page-header">
+  <a href="/" class="header-logo">
+    <svg width="22" height="22" viewBox="0 0 49 49" style="overflow:visible;margin-bottom:2px;">
+      <g transform="scale(3.5)">
+        <circle cx="12.5" cy="12" r="1" fill="#F8F7F4"/>
+        <polyline points="2,9.05 5.818,12.875 14,4.693" fill="none" stroke="#F8F7F4" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/>
+      </g>
+    </svg>
+    <span class="header-logo-text">Tended<sup style="font-size:0.5em;opacity:0.5;vertical-align:super;">&trade;</sup></span>
+  </a>
+</div>
+
+<div class="page-wrap">
+
+  <div class="page-eyebrow">Beta Program</div>
+  <h1 class="page-title">Report a bug.<br><em>Shape what's next.</em></h1>
+  <p class="page-intro">
+    Thanks for testing Tended. Use this form to report a bug or share feedback.
+    Be as specific as you can — a screenshot and a clear description help us fix things fast.
+  </p>
+
+  <div class="form-card" id="form-card">
+    <div id="form-content">
+
+      <form id="feedback-form" novalidate>
+
+        <!-- Email -->
+        <div class="form-group">
+          <label class="form-label" for="fb-email">Your email</label>
+          <input class="form-input" type="email" id="fb-email" name="email"
+            placeholder="you@example.com" autocomplete="email" required>
+        </div>
+
+        <div class="form-divider"></div>
+
+        <!-- Bug description -->
+        <div class="form-group">
+          <label class="form-label" for="fb-bug">
+            Bug or feedback description
+          </label>
+          <textarea class="form-textarea" id="fb-bug" name="bug_description"
+            placeholder="Describe what went wrong or what you want to share…" required style="min-height:120px;"></textarea>
+        </div>
+
+        <!-- What they were doing -->
+        <div class="form-group">
+          <label class="form-label" for="fb-action">
+            What were you trying to do when this happened?
+          </label>
+          <textarea class="form-textarea" id="fb-action" name="what_they_did"
+            placeholder="e.g. I was trying to log an oil change and upload a receipt…" required></textarea>
+        </div>
+
+        <!-- Device type -->
+        <div class="form-group">
+          <label class="form-label" for="fb-device">Device type</label>
+          <select class="form-select" id="fb-device" name="device_type" required>
+            <option value="" disabled selected>Select your device</option>
+            <option value="iPhone">iPhone</option>
+            <option value="Android">Android</option>
+            <option value="Desktop Chrome">Desktop — Chrome</option>
+            <option value="Desktop Safari">Desktop — Safari</option>
+            <option value="Desktop Other">Desktop — Other</option>
+          </select>
+        </div>
+
+        <div class="form-divider"></div>
+
+        <!-- Star rating -->
+        <div class="form-group">
+          <label class="form-label">
+            Overall rating
+            <span class="form-label-hint">How is Tended feeling so far?</span>
+          </label>
+          <div class="star-rating-wrap">
+            <!-- Stars in reverse DOM order so CSS sibling trick works -->
+            <div class="star-rating" id="star-rating" role="group" aria-label="Rating from 1 to 5">
+              <input type="radio" name="rating" id="star5" value="5">
+              <label for="star5" title="5 stars" aria-label="5 stars">&#9733;</label>
+              <input type="radio" name="rating" id="star4" value="4">
+              <label for="star4" title="4 stars" aria-label="4 stars">&#9733;</label>
+              <input type="radio" name="rating" id="star3" value="3">
+              <label for="star3" title="3 stars" aria-label="3 stars">&#9733;</label>
+              <input type="radio" name="rating" id="star2" value="2">
+              <label for="star2" title="2 stars" aria-label="2 stars">&#9733;</label>
+              <input type="radio" name="rating" id="star1" value="1">
+              <label for="star1" title="1 star" aria-label="1 star">&#9733;</label>
+            </div>
+            <span class="star-rating-label-text" id="star-label">No rating</span>
+          </div>
+        </div>
+
+        <!-- Screenshot upload -->
+        <div class="form-group">
+          <label class="form-label">
+            Screenshot
+            <span class="form-label-hint">Optional — PNG, JPG, GIF up to 10 MB</span>
+          </label>
+          <div class="file-upload-wrap" id="upload-wrap">
+            <input class="file-upload-input" type="file" id="fb-screenshot"
+              name="screenshot" accept="image/*" aria-label="Upload screenshot">
+            <div class="file-upload-box">
+              <div class="file-upload-icon">&#128247;</div>
+              <div class="file-upload-text">
+                <strong>Choose a file</strong> or drag and drop here
+              </div>
+              <div class="file-upload-name" id="file-name-display"></div>
+            </div>
+          </div>
+          <div class="upload-progress" id="upload-progress">
+            <div class="upload-progress-bar" id="upload-bar"></div>
+          </div>
+        </div>
+
+        <div class="form-error" id="feedback-error"></div>
+
+        <button type="submit" class="btn-submit" id="feedback-btn">Submit Feedback</button>
+
+      </form>
+
+    </div><!-- /form-content -->
+
+    <div class="form-success" id="feedback-success" style="display:none;">
+      <div class="form-success-icon">&#9829;</div>
+      <div class="form-success-title">Thank you</div>
+      <p class="form-success-sub">
+        Your feedback has been received. Every report helps us build a better Tended.
+        We will investigate and follow up if needed.
+      </p>
+      <button class="btn-another" id="btn-another">Submit another report</button>
+    </div>
+
+  </div><!-- /form-card -->
+
+</div><!-- /page-wrap -->
+
+<footer>
+  <div class="footer-logo">Tended</div>
+  <div class="footer-links">
+    <a href="https://app.usetended.com/terms">Terms</a>
+    <a href="https://app.usetended.com/privacy">Privacy</a>
+    <a href="mailto:support@usetended.com">Contact</a>
+  </div>
+</footer>
+
+<script>
+  const SURL = 'https://rkivkfmvykegnojlblpd.supabase.co';
+  const SKEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJraXZrZm12eWtlZ25vamxibHBkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM3MjI5NDUsImV4cCI6MjA4OTI5ODk0NX0.EaGsMcSO_bsMJ4YAHtBc6bc75soR_100FbA1lUys3hY';
+  const sb = supabase.createClient(SURL, SKEY);
+
+  // --- Star rating label ---
+  const starLabels = { '1': 'Poor', '2': 'Fair', '3': 'Good', '4': 'Great', '5': 'Excellent' };
+  document.querySelectorAll('input[name="rating"]').forEach(function(radio) {
+    radio.addEventListener('change', function() {
+      document.getElementById('star-label').textContent = starLabels[this.value] || '';
+    });
+  });
+
+  // --- File input display ---
+  document.getElementById('fb-screenshot').addEventListener('change', function() {
+    const file = this.files[0];
+    const wrap = document.getElementById('upload-wrap');
+    const nameEl = document.getElementById('file-name-display');
+    if (file) {
+      wrap.classList.add('has-file');
+      nameEl.textContent = file.name;
+    } else {
+      wrap.classList.remove('has-file');
+      nameEl.textContent = '';
+    }
+  });
+
+  // --- Form submit ---
+  document.getElementById('feedback-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    const btn = document.getElementById('feedback-btn');
+    const errEl = document.getElementById('feedback-error');
+    errEl.style.display = 'none';
+
+    const email       = document.getElementById('fb-email').value.trim();
+    const bugDesc     = document.getElementById('fb-bug').value.trim();
+    const whatTheyDid = document.getElementById('fb-action').value.trim();
+    const device      = document.getElementById('fb-device').value;
+    const ratingEl    = document.querySelector('input[name="rating"]:checked');
+    const screenshotFile = document.getElementById('fb-screenshot').files[0];
+
+    // Validation
+    if (!email || !bugDesc || !whatTheyDid || !device) {
+      errEl.textContent = 'Please fill in all required fields before submitting.';
+      errEl.style.display = 'block';
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      errEl.textContent = 'Please enter a valid email address.';
+      errEl.style.display = 'block';
+      return;
+    }
+    if (!ratingEl) {
+      errEl.textContent = 'Please select a star rating before submitting.';
+      errEl.style.display = 'block';
+      return;
+    }
+    if (screenshotFile && screenshotFile.size > 10 * 1024 * 1024) {
+      errEl.textContent = 'Screenshot must be under 10 MB. Please choose a smaller file.';
+      errEl.style.display = 'block';
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Submitting…';
+
+    let screenshotUrl = null;
+
+    try {
+      // Upload screenshot if provided
+      if (screenshotFile) {
+        const progressWrap = document.getElementById('upload-progress');
+        const progressBar  = document.getElementById('upload-bar');
+        progressWrap.style.display = 'block';
+        progressBar.style.width = '30%';
+
+        const ext = screenshotFile.name.split('.').pop();
+        const fileName = Date.now() + '-' + Math.random().toString(36).slice(2, 8) + '.' + ext;
+        const filePath = 'screenshots/' + fileName;
+
+        const { data: uploadData, error: uploadError } = await sb.storage
+          .from('beta-screenshots')
+          .upload(filePath, screenshotFile, { cacheControl: '3600', upsert: false });
+
+        if (uploadError) throw new Error('Screenshot upload failed: ' + uploadError.message);
+
+        progressBar.style.width = '80%';
+
+        const { data: urlData } = sb.storage
+          .from('beta-screenshots')
+          .getPublicUrl(filePath);
+
+        screenshotUrl = urlData.publicUrl;
+        progressBar.style.width = '100%';
+      }
+
+      // Insert feedback row
+      const { error: insertError } = await sb.from('beta_feedback').insert([{
+        email:           email,
+        bug_description: bugDesc,
+        what_they_did:   whatTheyDid,
+        device_type:     device,
+        rating:          parseInt(ratingEl.value, 10),
+        screenshot_url:  screenshotUrl
+      }]);
+
+      if (insertError) throw insertError;
+
+      // Show success
+      document.getElementById('form-content').style.display = 'none';
+      document.getElementById('feedback-success').style.display = 'block';
+
+    } catch (err) {
+      errEl.textContent = 'Something went wrong. Please try again in a moment.';
+      errEl.style.display = 'block';
+      btn.disabled = false;
+      btn.textContent = 'Submit Feedback';
+      document.getElementById('upload-progress').style.display = 'none';
+    }
+  });
+
+  // --- Submit another ---
+  document.getElementById('btn-another').addEventListener('click', function() {
+    document.getElementById('feedback-form').reset();
+    // Explicitly uncheck all star radios (belt-and-suspenders for all browsers)
+    document.querySelectorAll('input[name="rating"]').forEach(function(r) { r.checked = false; });
+    document.getElementById('star-label').textContent = 'No rating';
+    document.getElementById('upload-wrap').classList.remove('has-file');
+    document.getElementById('file-name-display').textContent = '';
+    document.getElementById('upload-progress').style.display = 'none';
+    document.getElementById('upload-bar').style.width = '0%';
+    document.getElementById('feedback-error').style.display = 'none';
+    document.getElementById('feedback-btn').disabled = false;
+    document.getElementById('feedback-btn').textContent = 'Submit Feedback';
+    document.getElementById('feedback-success').style.display = 'none';
+    document.getElementById('form-content').style.display = 'block';
+    // Scroll to top of page so the form is visible on mobile
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+</script>
+
+</body>
+</html>
