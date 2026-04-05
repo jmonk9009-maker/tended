@@ -512,6 +512,11 @@
             </select>
           </div>
 
+          <div class="form-group">
+            <label class="form-label" for="sf-occupation">What do you do for work? <span style="opacity:0.4;font-weight:400;">(optional)</span></label>
+            <input class="form-input" type="text" id="sf-occupation" name="occupation" placeholder="e.g. Mechanic, Realtor, Property Manager...">
+          </div>
+
           <div class="form-error" id="signup-error"></div>
 
           <button type="submit" class="btn-submit" id="signup-btn">Apply for Beta</button>
@@ -650,6 +655,7 @@
     const asset = document.getElementById('sf-asset').value;
     const tech = document.getElementById('sf-tech').value;
     const referral = document.getElementById('sf-referral').value;
+    const occupation = document.getElementById('sf-occupation').value.trim();
 
     if (!name || !email || !asset || !tech || !referral) {
       errEl.textContent = 'Please fill in all fields before submitting.';
@@ -690,7 +696,8 @@
         email: email,
         asset_type: asset,
         tech_comfort: tech,
-        referral_source: referral
+        referral_source: referral,
+        occupation: occupation || null
       }]);
 
       if (error) throw error;
