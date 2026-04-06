@@ -8,6 +8,7 @@
   ],
   "redirects": [
     { "source": "/blog", "destination": "https://app.usetended.com/blog", "permanent": false },
-    { "source": "/blog.html", "destination": "https://app.usetended.com/blog", "permanent": false }
+    { "source": "/blog.html", "destination": "https://app.usetended.com/blog", "permanent": false },
+    { "source": "/tools", "destination": "https://app.usetended.com/tools", "permanent": false }
   ]
 }
