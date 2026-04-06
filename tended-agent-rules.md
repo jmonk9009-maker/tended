@@ -17,6 +17,18 @@ The actual values are stored safely in [location where they were saved].
 
 This applies to: Resend API keys, Supabase keys, Stripe keys, Anthropic keys, VAPID keys, any .env values, any OAuth tokens, and any passwords. If unsure whether something is sensitive, treat it as sensitive.
 
+PUSH RULE:
+After completing all changes for a task:
+1. Run npm run build to verify everything compiles
+2. If the build fails, fix the error and rebuild until it passes
+3. Once the build passes, git add all changed files
+4. git commit with a conventional format message (feat:, fix:, chore:) summarizing all changes
+5. git push origin main
+6. Confirm Vercel picks up the deployment and it reaches Ready status
+7. Only THEN report results back to James
+8. Never report a task as complete with unpushed commits
+9. If multiple files were changed across multiple fixes in one task, they go in ONE commit and ONE push at the end
+
 PRE-FLIGHT CHECKLIST:
 Before doing anything else, confirm back to James in plain English what you understood the task to be, every file you plan to touch, every external service you plan to use, and any assumptions you are making. Wait for explicit written confirmation before proceeding.
 
