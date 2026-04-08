@@ -1,3 +1,5 @@
+FIRST: Read TENDED-MISSION.md before starting any task. This file contains the full business context, priorities, targets, and decision-making principles.
+
 ═══════════════════════════════════════════════════════
 TENDED AGENT RULES — Master Operating Instructions
 Owner: James Monk — Tended LLC
