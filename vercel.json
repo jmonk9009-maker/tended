@@ -4,7 +4,8 @@
     { "source": "/share/:token", "destination": "/share.html" },
     { "source": "/terms", "destination": "/terms.html" },
     { "source": "/privacy", "destination": "/privacy.html" },
-    { "source": "/beta", "destination": "/beta.html" }
+    { "source": "/beta", "destination": "/beta.html" },
+    { "source": "/business", "destination": "/business.html" }
   ],
   "redirects": [
     { "source": "/blog", "destination": "https://app.usetended.com/blog", "permanent": false },
