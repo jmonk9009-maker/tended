@@ -101,8 +101,19 @@
     .social-link { color: #9CA3AF; text-decoration: none; transition: color 0.15s; display: inline-flex; align-items: center; }
     .social-link:hover { color: #374151; }
     @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    /* --- HAMBURGER --- */
+    .hamburger { display: none; background: none; border: none; cursor: pointer; padding: 8px; align-items: center; justify-content: center; }
+    .mobile-menu { display: none; position: fixed; top: 67px; left: 0; right: 0; background: rgba(13,22,38,0.98); backdrop-filter: blur(12px); z-index: 99; border-bottom: 1px solid rgba(255,255,255,0.06); flex-direction: column; padding: 8px 0; }
+    .mobile-menu.open { display: flex; }
+    .mobile-menu a { font-family: 'DM Sans', sans-serif; font-size: 0.95rem; font-weight: 500; color: rgba(248,247,244,0.7); text-decoration: none; padding: 16px 24px; border-bottom: 1px solid rgba(255,255,255,0.04); transition: background 0.15s; }
+    .mobile-menu a:hover { background: rgba(255,255,255,0.04); }
+    .mobile-menu a:last-child { border-bottom: none; }
+
     @media (max-width: 640px) {
-      nav { padding: 20px 24px; }
+      nav { padding: 16px 20px; }
+      .nav-links { display: none; }
+      .hamburger { display: flex; }
+      .mobile-menu { top: 57px; }
       .steps-grid { grid-template-columns: 1fr; }
       .badges-grid { grid-template-columns: 1fr; }
       .transfer-flow { gap: 8px; }
@@ -129,10 +140,22 @@
     <a href="/business" class="nav-signin">For Business</a>
     <a href="https://app.usetended.com/tools" class="nav-signin">Free Tools</a>
     <a href="https://app.usetended.com/blog" class="nav-signin">Blog</a>
-    <a href="/beta.html" class="nav-signin">Beta</a>
     <a href="https://app.usetended.com/auth/login" class="nav-signin">Sign In</a>
   </div>
+  <button class="hamburger" onclick="toggleMenu()" aria-label="Menu">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#F8F7F4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+    </svg>
+  </button>
 </nav>
+
+<!-- MOBILE MENU -->
+<div class="mobile-menu" id="mobile-menu">
+  <a href="/business" onclick="toggleMenu()">For Business</a>
+  <a href="https://app.usetended.com/tools" onclick="toggleMenu()">Free Tools</a>
+  <a href="https://app.usetended.com/blog" onclick="toggleMenu()">Blog</a>
+  <a href="https://app.usetended.com/auth/login" onclick="toggleMenu()">Sign In</a>
+</div>
 
 <section class="hero">
   <div class="hero-eyebrow">Verified maintenance. Real proof. Real value.</div>
@@ -331,6 +354,16 @@
 </footer>
 
 <script>
+// --- Hamburger menu toggle ---
+function toggleMenu() {
+  var menu = document.getElementById('mobile-menu');
+  var btn = document.querySelector('.hamburger');
+  var isOpen = menu.classList.toggle('open');
+  btn.innerHTML = isOpen
+    ? '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#F8F7F4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>'
+    : '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#F8F7F4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>';
+}
+
 const observer = new IntersectionObserver(entries => {
   entries.forEach(e => {
     if (e.isIntersecting) {

@@ -190,7 +190,7 @@
     <a href="/business" class="b-nav-link active">For Business</a>
     <a href="#pricing" class="b-nav-link">Pricing</a>
     <a href="https://app.usetended.com/auth/login" class="b-nav-link">Sign In</a>
-    <a href="https://app.usetended.com/auth/signup?plan=business" class="b-nav-cta">Start Free Trial</a>
+    <a href="https://app.usetended.com/auth/login?plan=business" class="b-nav-cta">Start Free Trial</a>
   </div>
   <button class="b-hamburger" onclick="toggleMenu()" aria-label="Menu">
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#F8F7F4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -205,7 +205,7 @@
   <a href="/business" onclick="toggleMenu()">For Business</a>
   <a href="#pricing" onclick="toggleMenu()">Pricing</a>
   <a href="https://app.usetended.com/auth/login" onclick="toggleMenu()">Sign In</a>
-  <a href="https://app.usetended.com/auth/signup?plan=business" class="b-mobile-cta" onclick="toggleMenu()">Start Free Trial</a>
+  <a href="https://app.usetended.com/auth/login?plan=business" class="b-mobile-cta" onclick="toggleMenu()">Start Free Trial</a>
 </div>
 
 <!-- HERO -->
@@ -214,7 +214,7 @@
     <div class="b-hero-tag">Tended for Business</div>
     <h1 class="b-hero-title">Maintenance Intelligence for Property and Fleet Managers</h1>
     <p class="b-hero-sub">Track, verify, and report maintenance across your entire portfolio. Reduce disputes. Increase asset value. Save time.</p>
-    <a href="https://app.usetended.com/auth/signup?plan=business" class="b-hero-cta">Start Free Trial</a>
+    <a href="https://app.usetended.com/auth/login?plan=business" class="b-hero-cta">Start Free Trial</a>
     <div class="b-hero-note">14-day free trial &middot; No credit card required</div>
   </div>
 </section>
@@ -362,7 +362,7 @@
         <li><span class="b-price-check">&#10003;</span> Manual/cash entries</li>
         <li><span class="b-price-check">&#10003;</span> 14-day free trial</li>
       </ul>
-      <a href="https://app.usetended.com/auth/signup?plan=business_starter_annual" id="cta-starter" class="b-price-cta">Start Free Trial</a>
+      <a href="https://app.usetended.com/auth/login?plan=business_starter_annual" id="cta-starter" class="b-price-cta">Start Free Trial</a>
     </div>
     <div class="b-price-card featured" id="card-pro">
       <div class="b-price-badge">Most Popular</div>
@@ -379,7 +379,7 @@
         <li><span class="b-price-check">&#10003;</span> Bulk actions</li>
         <li><span class="b-price-check">&#10003;</span> 14-day free trial</li>
       </ul>
-      <a href="https://app.usetended.com/auth/signup?plan=business_pro_annual" id="cta-pro" class="b-price-cta">Start Free Trial</a>
+      <a href="https://app.usetended.com/auth/login?plan=business_pro_annual" id="cta-pro" class="b-price-cta">Start Free Trial</a>
     </div>
     <div class="b-price-card" id="card-unlimited">
       <div class="b-price-save" id="save-unlimited" style="">Save 17%</div>
@@ -393,7 +393,7 @@
         <li><span class="b-price-check">&#10003;</span> Dedicated support</li>
         <li><span class="b-price-check">&#10003;</span> 14-day free trial</li>
       </ul>
-      <a href="https://app.usetended.com/auth/signup?plan=business_unlimited_annual" id="cta-unlimited" class="b-price-cta">Start Free Trial</a>
+      <a href="https://app.usetended.com/auth/login?plan=business_unlimited_annual" id="cta-unlimited" class="b-price-cta">Start Free Trial</a>
     </div>
   </div>
 </section>
@@ -495,13 +495,13 @@ function setBilling(annual) {
       priceEl.innerHTML = '$' + parts[0] + '<span>.' + parts[1] + '/mo</span>';
       periodEl.textContent = 'Billed annually at $' + p.annual.toLocaleString('en-US', {minimumFractionDigits:2});
       saveEl.style.display = '';
-      ctaEl.href = 'https://app.usetended.com/auth/signup?plan=' + p.planA;
+      ctaEl.href = 'https://app.usetended.com/auth/login?plan=' + p.planA;
     } else {
       var mp = String(p.monthly).split('.');
       priceEl.innerHTML = '$' + mp[0] + '<span>.' + mp[1] + '/mo</span>';
       periodEl.textContent = 'Billed monthly';
       saveEl.style.display = 'none';
-      ctaEl.href = 'https://app.usetended.com/auth/signup?plan=' + p.planM;
+      ctaEl.href = 'https://app.usetended.com/auth/login?plan=' + p.planM;
     }
   });
 }
