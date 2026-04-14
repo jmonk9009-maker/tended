@@ -28,8 +28,9 @@
     nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; padding: 24px 40px; display: flex; align-items: center; justify-content: space-between; }
     .nav-logo { display: inline-flex; align-items: flex-end; gap: 7px; text-decoration: none; }
     .nav-logo-text { font-family: 'Playfair Display', Georgia, serif; font-size: 1.4rem; font-weight: 700; color: var(--off-white); letter-spacing: -0.01em; line-height: 1; }
-    .nav-signin { font-family: 'DM Mono', monospace; font-size: 0.65rem; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(248,247,244,0.5); text-decoration: none; transition: color 0.15s; }
-    .nav-signin:hover { color: rgba(248,247,244,0.9); }
+    .nav-links { display: flex; align-items: center; gap: 24px; }
+    .nav-signin { font-family: 'DM Sans', sans-serif; font-size: 0.85rem; font-weight: 500; color: rgba(248,247,244,0.55); text-decoration: none; transition: color 0.15s; letter-spacing: 0.01em; }
+    .nav-signin:hover { color: rgba(248,247,244,0.95); }
     .hero { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 120px 24px 80px; position: relative; }
     .hero-eyebrow { font-family: 'DM Mono', monospace; font-size: 0.68rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--gold); margin-bottom: 24px; opacity: 0; animation: fadeUp 0.6s ease 0.1s forwards; }
     .hero-title { font-family: 'Playfair Display', Georgia, serif; font-size: clamp(2.6rem, 7vw, 5.5rem); font-weight: 700; line-height: 1.08; letter-spacing: -0.02em; color: var(--off-white); max-width: 820px; margin-bottom: 8px; opacity: 0; animation: fadeUp 0.7s ease 0.2s forwards; }
@@ -91,14 +92,14 @@
     .no-proof-code { font-family: 'DM Mono', monospace; font-size: clamp(1.2rem, 4vw, 2.2rem); letter-spacing: 0.1em; color: rgba(248,247,244,0.2); margin-bottom: 20px; display: block; }
     .no-proof-title { font-family: 'Playfair Display', serif; font-size: clamp(2rem, 5vw, 3.5rem); font-weight: 700; letter-spacing: -0.02em; line-height: 1.1; margin-bottom: 20px; }
     .no-proof-sub { font-size: 1rem; color: rgba(248,247,244,0.5); max-width: 440px; margin: 0 auto 40px; line-height: 1.7; }
-    footer { padding: 32px 40px; border-top: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: space-between; position: relative; z-index: 1; }
-    .footer-logo { display: inline-flex; align-items: flex-end; gap: 6px; font-family: 'Playfair Display', serif; font-size: 1rem; font-weight: 700; color: rgba(248,247,244,0.4); }
+    footer { padding: 32px 40px; border-top: 1px solid #E5E7EB; display: flex; align-items: center; justify-content: space-between; position: relative; z-index: 1; background: #fff; }
+    .footer-logo { display: inline-flex; align-items: flex-end; gap: 6px; font-family: 'Playfair Display', serif; font-size: 1rem; font-weight: 700; color: #0D1626; }
     .footer-links { display: flex; gap: 24px; }
-    .footer-links a { font-size: 0.75rem; color: rgba(248,247,244,0.3); text-decoration: none; }
-    .footer-links a:hover { color: rgba(248,247,244,0.6); }
+    .footer-links a { font-size: 0.75rem; color: #6B7280; text-decoration: none; }
+    .footer-links a:hover { color: #374151; }
     .social-links { display: flex; gap: 16px; align-items: center; }
-    .social-link { color: rgba(248,247,244,0.3); text-decoration: none; font-size: 0.75rem; font-family: 'DM Mono', monospace; letter-spacing: 0.06em; transition: color 0.15s; }
-    .social-link:hover { color: rgba(248,247,244,0.7); }
+    .social-link { color: #9CA3AF; text-decoration: none; transition: color 0.15s; display: inline-flex; align-items: center; }
+    .social-link:hover { color: #374151; }
     @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
     @media (max-width: 640px) {
       nav { padding: 20px 24px; }
@@ -124,11 +125,13 @@
     </svg>
     <span class="nav-logo-text">Tended<sup style="font-size:0.5em;opacity:0.5;vertical-align:super;">&trade;</sup></span>
   </a>
-  <a href="/business" class="nav-signin" style="margin-right:16px;">For Business</a>
-  <a href="https://app.usetended.com/tools" class="nav-signin" style="margin-right:16px;">Free Tools</a>
-  <a href="https://app.usetended.com/blog" class="nav-signin" style="margin-right:16px;">Blog</a>
-  <a href="/beta.html" class="nav-signin" style="margin-right:16px;">Beta</a>
+  <div class="nav-links">
+    <a href="/business" class="nav-signin">For Business</a>
+    <a href="https://app.usetended.com/tools" class="nav-signin">Free Tools</a>
+    <a href="https://app.usetended.com/blog" class="nav-signin">Blog</a>
+    <a href="/beta.html" class="nav-signin">Beta</a>
     <a href="https://app.usetended.com/auth/login" class="nav-signin">Sign In</a>
+  </div>
 </nav>
 
 <section class="hero">
@@ -310,15 +313,15 @@
 <footer>
   <div class="footer-logo">Tended</div>
   <div style="display:flex;align-items:center;gap:8px;">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(248,247,244,0.4)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-    <span style="font-size:0.68rem;color:rgba(248,247,244,0.35);font-family:'DM Sans',sans-serif;">Veteran-owned business &middot; Athens, Georgia</span>
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C4962A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+    <span style="font-size:0.68rem;color:#6B7280;font-family:'DM Sans',sans-serif;">Veteran-owned business &middot; Athens, Georgia</span>
   </div>
   <div class="social-links">
-    <a href="https://www.instagram.com/use_tended/" class="social-link" target="_blank">Instagram</a>
-    <a href="https://www.tiktok.com/@tendedapp" class="social-link" target="_blank">TikTok</a>
-    <a href="https://x.com/usetended" class="social-link" target="_blank">X</a>
-    <a href="https://www.youtube.com/@usetended" class="social-link" target="_blank">YouTube</a>
-    <a href="https://www.facebook.com/profile.php?id=61578553905658" class="social-link" target="_blank">Facebook</a>
+    <a href="https://www.instagram.com/use_tended/" class="social-link" target="_blank" rel="noopener noreferrer" aria-label="Instagram"><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2c2.717 0 3.056.01 4.122.06 1.065.05 1.79.217 2.428.465.66.254 1.216.598 1.772 1.153a4.908 4.908 0 0 1 1.153 1.772c.247.637.415 1.363.465 2.428.047 1.066.06 1.405.06 4.122 0 2.717-.01 3.056-.06 4.122-.05 1.065-.218 1.79-.465 2.428a4.883 4.883 0 0 1-1.153 1.772 4.915 4.915 0 0 1-1.772 1.153c-.637.247-1.363.415-2.428.465-1.066.047-1.405.06-4.122.06-2.717 0-3.056-.01-4.122-.06-1.065-.05-1.79-.218-2.428-.465a4.89 4.89 0 0 1-1.772-1.153 4.904 4.904 0 0 1-1.153-1.772c-.248-.637-.415-1.363-.465-2.428C2.013 15.056 2 14.717 2 12c0-2.717.01-3.056.06-4.122.05-1.066.217-1.79.465-2.428a4.88 4.88 0 0 1 1.153-1.772A4.897 4.897 0 0 1 5.45 2.525c.638-.248 1.362-.415 2.428-.465C8.944 2.013 9.283 2 12 2zm0 5a5 5 0 1 0 0 10 5 5 0 0 0 0-10zm6.5-.25a1.25 1.25 0 1 0-2.5 0 1.25 1.25 0 0 0 2.5 0zM12 9a3 3 0 1 1 0 6 3 3 0 0 1 0-6z"/></svg></a>
+    <a href="https://www.tiktok.com/@tendedapp" class="social-link" target="_blank" rel="noopener noreferrer" aria-label="TikTok"><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M16.6 5.82A4.278 4.278 0 0 1 15.54 3h-3.09v12.4a2.592 2.592 0 0 1-2.59 2.5c-1.42 0-2.6-1.16-2.6-2.6 0-1.72 1.66-3.01 3.37-2.48V9.66c-3.45-.46-6.47 2.22-6.47 5.64 0 3.33 2.76 5.7 5.69 5.7 3.14 0 5.69-2.55 5.69-5.7V9.01a7.35 7.35 0 0 0 4.3 1.38V7.3s-1.88.09-3.24-1.48z"/></svg></a>
+    <a href="https://x.com/usetended" class="social-link" target="_blank" rel="noopener noreferrer" aria-label="X"><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a>
+    <a href="https://www.youtube.com/@usetended" class="social-link" target="_blank" rel="noopener noreferrer" aria-label="YouTube"><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.546 12 3.546 12 3.546s-7.505 0-9.377.504A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.504 9.376.504 9.376.504s7.505 0 9.377-.504a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg></a>
+    <a href="https://www.facebook.com/profile.php?id=61578553905658" class="social-link" target="_blank" rel="noopener noreferrer" aria-label="Facebook"><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg></a>
   </div>
   <div class="footer-links">
     <a href="https://app.usetended.com/terms">Terms</a>

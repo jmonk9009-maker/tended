@@ -57,7 +57,7 @@
     .b-hero::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 0%, rgba(27,43,75,0.5) 0%, transparent 70%); }
     .b-hero-inner { position: relative; z-index: 1; max-width: 780px; margin: 0 auto; }
     .b-hero-tag { font-family: 'DM Mono', monospace; font-size: 0.65rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--gold); margin-bottom: 28px; opacity: 0; animation: bFadeUp 0.6s ease 0.1s forwards; }
-    .b-hero-title { font-family: 'Playfair Display', Georgia, serif; font-size: clamp(2.2rem, 5.5vw, 3.8rem); font-weight: 700; line-height: 1.12; letter-spacing: -0.02em; color: var(--off-white); margin-bottom: 24px; opacity: 0; animation: bFadeUp 0.7s ease 0.2s forwards; }
+    .b-hero-title { font-family: 'DM Sans', sans-serif; font-size: clamp(2.2rem, 5.5vw, 3.8rem); font-weight: 700; line-height: 1.12; letter-spacing: -0.02em; color: var(--off-white); margin-bottom: 24px; opacity: 0; animation: bFadeUp 0.7s ease 0.2s forwards; }
     .b-hero-sub { font-size: clamp(1rem, 2vw, 1.15rem); color: rgba(248,247,244,0.55); max-width: 560px; line-height: 1.7; margin: 0 auto 48px; font-weight: 300; opacity: 0; animation: bFadeUp 0.7s ease 0.35s forwards; }
     .b-hero-cta { display: inline-block; background: var(--gold); color: var(--navy-dark); border: none; border-radius: 10px; padding: 18px 40px; font-family: 'DM Sans', sans-serif; font-size: 1rem; font-weight: 700; cursor: pointer; text-decoration: none; transition: all 0.15s; opacity: 0; animation: bFadeUp 0.7s ease 0.45s forwards; }
     .b-hero-cta:hover { background: var(--gold-light); transform: translateY(-1px); }
@@ -68,7 +68,7 @@
     .b-section-alt { background: var(--gray-50); }
     .b-section-dark { background: var(--navy-dark); color: var(--off-white); }
     .b-eyebrow { font-family: 'DM Mono', monospace; font-size: 0.62rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--gold); text-align: center; margin-bottom: 16px; }
-    .b-heading { font-family: 'Playfair Display', Georgia, serif; font-size: clamp(1.8rem, 4vw, 2.6rem); font-weight: 600; text-align: center; line-height: 1.2; letter-spacing: -0.02em; margin-bottom: 20px; color: var(--gray-900); }
+    .b-heading { font-family: 'DM Sans', sans-serif; font-size: clamp(1.8rem, 4vw, 2.6rem); font-weight: 700; text-align: center; line-height: 1.2; letter-spacing: -0.02em; margin-bottom: 20px; color: var(--gray-900); }
     .b-heading-light { color: var(--off-white); }
     .b-subheading { font-size: 1rem; color: var(--gray-500); text-align: center; max-width: 520px; margin: 0 auto 64px; line-height: 1.7; }
     .b-subheading-light { color: rgba(248,247,244,0.5); }
@@ -79,7 +79,7 @@
     .b-step-icon { width: 56px; height: 56px; border-radius: 14px; background: var(--gray-100); display: inline-flex; align-items: center; justify-content: center; margin-bottom: 24px; }
     .b-step-icon svg { width: 28px; height: 28px; stroke: var(--navy); fill: none; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
     .b-step-num { font-family: 'DM Mono', monospace; font-size: 0.6rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--gold); margin-bottom: 12px; }
-    .b-step-title { font-family: 'Playfair Display', serif; font-size: 1.1rem; font-weight: 600; color: var(--gray-900); margin-bottom: 10px; }
+    .b-step-title { font-family: 'DM Sans', sans-serif; font-size: 1.1rem; font-weight: 600; color: var(--gray-900); margin-bottom: 10px; }
     .b-step-desc { font-size: 0.88rem; color: var(--gray-500); line-height: 1.65; }
 
     /* --- FEATURES --- */
@@ -102,7 +102,7 @@
     .b-price-card { background: #fff; border: 1px solid var(--gray-200); border-radius: 14px; padding: 36px 28px; text-align: center; }
     .b-price-card.featured { border-color: var(--navy); box-shadow: 0 8px 40px rgba(13,22,38,0.12); position: relative; }
     .b-price-badge { position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: var(--navy-dark); color: var(--off-white); font-family: 'DM Mono', monospace; font-size: 0.58rem; letter-spacing: 0.1em; text-transform: uppercase; padding: 5px 16px; border-radius: 100px; white-space: nowrap; }
-    .b-price-name { font-family: 'Playfair Display', serif; font-size: 1.2rem; font-weight: 600; color: var(--gray-900); margin-bottom: 8px; }
+    .b-price-name { font-family: 'DM Sans', sans-serif; font-size: 1.2rem; font-weight: 600; color: var(--gray-900); margin-bottom: 8px; }
     .b-price-amount { font-family: 'DM Sans', sans-serif; font-size: 2.4rem; font-weight: 700; color: var(--gray-900); line-height: 1; margin-bottom: 4px; }
     .b-price-amount span { font-size: 0.9rem; font-weight: 400; color: var(--gray-500); }
     .b-price-period { font-size: 0.8rem; color: var(--gray-500); margin-bottom: 28px; }
@@ -135,20 +135,31 @@
 
     /* --- FOOTER --- */
     .b-footer { padding: 32px 40px; border-top: 1px solid var(--gray-200); display: flex; align-items: center; justify-content: space-between; background: #fff; }
-    .b-footer-logo { font-family: 'Playfair Display', serif; font-size: 1rem; font-weight: 700; color: var(--gray-400); }
+    .b-footer-logo { font-family: 'Playfair Display', serif; font-size: 1rem; font-weight: 700; color: #0D1626; }
     .b-footer-links { display: flex; gap: 24px; }
     .b-footer-links a { font-size: 0.75rem; color: var(--gray-400); text-decoration: none; }
     .b-footer-links a:hover { color: var(--gray-600); }
     .b-footer-social { display: flex; gap: 16px; align-items: center; }
-    .b-footer-social a { color: var(--gray-400); text-decoration: none; font-size: 0.75rem; font-family: 'DM Mono', monospace; letter-spacing: 0.06em; transition: color 0.15s; }
-    .b-footer-social a:hover { color: var(--gray-700); }
+    .b-footer-social a { color: #9CA3AF; text-decoration: none; display: inline-flex; align-items: center; transition: color 0.15s; }
+    .b-footer-social a:hover { color: #374151; }
+
+    /* --- HAMBURGER --- */
+    .b-hamburger { display: none; background: none; border: none; cursor: pointer; padding: 8px; align-items: center; justify-content: center; }
+    .b-mobile-menu { display: none; position: fixed; top: 67px; left: 0; right: 0; background: rgba(13,22,38,0.98); backdrop-filter: blur(12px); z-index: 99; border-bottom: 1px solid rgba(255,255,255,0.06); flex-direction: column; padding: 8px 0; }
+    .b-mobile-menu.open { display: flex; }
+    .b-mobile-menu a { font-family: 'DM Sans', sans-serif; font-size: 0.95rem; font-weight: 500; color: rgba(248,247,244,0.7); text-decoration: none; padding: 16px 24px; border-bottom: 1px solid rgba(255,255,255,0.04); transition: background 0.15s; }
+    .b-mobile-menu a:hover { background: rgba(255,255,255,0.04); }
+    .b-mobile-menu a:last-child { border-bottom: none; }
+    .b-mobile-menu .b-mobile-cta { background: var(--gold); color: var(--navy-dark); font-weight: 700; border-radius: 10px; margin: 16px 24px; padding: 14px; text-align: center; border-bottom: none; }
+    .b-nav-link.active { border-bottom: 2px solid var(--gold); padding-bottom: 2px; }
 
     @keyframes bFadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
     @media (max-width: 768px) {
       .b-nav { padding: 16px 20px; }
-      .b-nav-links { gap: 16px; }
-      .b-nav-link { font-size: 0.75rem; }
+      .b-nav-links { display: none; }
+      .b-hamburger { display: flex; }
+      .b-mobile-menu { top: 57px; }
       .b-steps { grid-template-columns: 1fr; gap: 0; }
       .b-features { grid-template-columns: 1fr; }
       .b-cases { grid-template-columns: 1fr; }
@@ -181,7 +192,21 @@
     <a href="https://app.usetended.com/auth/login" class="b-nav-link">Sign In</a>
     <a href="https://app.usetended.com/auth/signup?plan=business" class="b-nav-cta">Start Free Trial</a>
   </div>
+  <button class="b-hamburger" onclick="toggleMenu()" aria-label="Menu">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#F8F7F4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+    </svg>
+  </button>
 </nav>
+
+<!-- MOBILE MENU -->
+<div class="b-mobile-menu" id="mobile-menu">
+  <a href="/" onclick="toggleMenu()">For Individuals</a>
+  <a href="/business" onclick="toggleMenu()">For Business</a>
+  <a href="#pricing" onclick="toggleMenu()">Pricing</a>
+  <a href="https://app.usetended.com/auth/login" onclick="toggleMenu()">Sign In</a>
+  <a href="https://app.usetended.com/auth/signup?plan=business" class="b-mobile-cta" onclick="toggleMenu()">Start Free Trial</a>
+</div>
 
 <!-- HERO -->
 <section class="b-hero">
@@ -403,11 +428,11 @@
     <a href="mailto:support@usetended.com">Contact</a>
   </div>
   <div class="b-footer-social">
-    <a href="https://www.instagram.com/use_tended/" target="_blank">Instagram</a>
-    <a href="https://www.tiktok.com/@tendedapp" target="_blank">TikTok</a>
-    <a href="https://x.com/usetended" target="_blank">X</a>
-    <a href="https://www.youtube.com/@usetended" target="_blank">YouTube</a>
-    <a href="https://www.facebook.com/profile.php?id=61578553905658" target="_blank">Facebook</a>
+    <a href="https://www.instagram.com/use_tended/" target="_blank" rel="noopener noreferrer" aria-label="Instagram"><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2c2.717 0 3.056.01 4.122.06 1.065.05 1.79.217 2.428.465.66.254 1.216.598 1.772 1.153a4.908 4.908 0 0 1 1.153 1.772c.247.637.415 1.363.465 2.428.047 1.066.06 1.405.06 4.122 0 2.717-.01 3.056-.06 4.122-.05 1.065-.218 1.79-.465 2.428a4.883 4.883 0 0 1-1.153 1.772 4.915 4.915 0 0 1-1.772 1.153c-.637.247-1.363.415-2.428.465-1.066.047-1.405.06-4.122.06-2.717 0-3.056-.01-4.122-.06-1.065-.05-1.79-.218-2.428-.465a4.89 4.89 0 0 1-1.772-1.153 4.904 4.904 0 0 1-1.153-1.772c-.248-.637-.415-1.363-.465-2.428C2.013 15.056 2 14.717 2 12c0-2.717.01-3.056.06-4.122.05-1.066.217-1.79.465-2.428a4.88 4.88 0 0 1 1.153-1.772A4.897 4.897 0 0 1 5.45 2.525c.638-.248 1.362-.415 2.428-.465C8.944 2.013 9.283 2 12 2zm0 5a5 5 0 1 0 0 10 5 5 0 0 0 0-10zm6.5-.25a1.25 1.25 0 1 0-2.5 0 1.25 1.25 0 0 0 2.5 0zM12 9a3 3 0 1 1 0 6 3 3 0 0 1 0-6z"/></svg></a>
+    <a href="https://www.tiktok.com/@tendedapp" target="_blank" rel="noopener noreferrer" aria-label="TikTok"><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M16.6 5.82A4.278 4.278 0 0 1 15.54 3h-3.09v12.4a2.592 2.592 0 0 1-2.59 2.5c-1.42 0-2.6-1.16-2.6-2.6 0-1.72 1.66-3.01 3.37-2.48V9.66c-3.45-.46-6.47 2.22-6.47 5.64 0 3.33 2.76 5.7 5.69 5.7 3.14 0 5.69-2.55 5.69-5.7V9.01a7.35 7.35 0 0 0 4.3 1.38V7.3s-1.88.09-3.24-1.48z"/></svg></a>
+    <a href="https://x.com/usetended" target="_blank" rel="noopener noreferrer" aria-label="X"><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a>
+    <a href="https://www.youtube.com/@usetended" target="_blank" rel="noopener noreferrer" aria-label="YouTube"><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.546 12 3.546 12 3.546s-7.505 0-9.377.504A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.504 9.376.504 9.376.504s7.505 0 9.377-.504a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg></a>
+    <a href="https://www.facebook.com/profile.php?id=61578553905658" target="_blank" rel="noopener noreferrer" aria-label="Facebook"><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg></a>
   </div>
 </footer>
 
@@ -426,6 +451,16 @@ document.querySelectorAll('.b-step, .b-feature, .b-case, .b-price-card, .b-proof
   el.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
   observer.observe(el);
 });
+
+// --- Hamburger menu toggle ---
+function toggleMenu() {
+  var menu = document.getElementById('mobile-menu');
+  var btn = document.querySelector('.b-hamburger');
+  var isOpen = menu.classList.toggle('open');
+  btn.innerHTML = isOpen
+    ? '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#F8F7F4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>'
+    : '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#F8F7F4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>';
+}
 
 // --- Billing toggle ---
 var isAnnual = true;
