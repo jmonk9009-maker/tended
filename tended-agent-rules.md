@@ -1,80 +1,100 @@
-FIRST: Read TENDED-MISSION.md before starting any task. This file contains the full business context, priorities, targets, and decision-making principles.
+# TENDED AGENT RULES — v2.0
+# Last Updated: April 14, 2026
+# These rules apply to ALL agents working on Tended code.
 
-═══════════════════════════════════════════════════════
-TENDED AGENT RULES — Master Operating Instructions
-Owner: James Monk — Tended LLC
-Last Updated: April 5 2026
-STOP WORD: HALT
-═══════════════════════════════════════════════════════
+## GOLDEN RULE
+Do NOT tell James something is done until you have VERIFIED it works. "Pushed to main" is not done. "Deployed and tested" is done.
 
-These rules apply to every Cowork and Claude Code session. Read this file before doing anything else. These rules override any conflicting instruction.
+## BEFORE YOU BUILD
+1. Read TENDED-MISSION.md and CLAUDE.md before every task
+2. Understand the FULL scope of what's being asked — not just the code change, but the user experience
+3. If the task involves a user-facing flow (onboarding, login, signup, checkout, etc.), map out every step the user takes BEFORE writing code
+4. Ask yourself: "If James creates a new account right now and goes through this flow, will it work perfectly from start to finish?"
 
-SECURITY REPORTING:
-When reporting task results to James, never include API keys, secrets, tokens, passwords, or any sensitive credentials in plain text. If a task involves sensitive material, format the report like this:
+## WHILE YOU BUILD
+1. One commit per completed task, not per individual file
+2. Include ALL files needed for the feature to work — routes, components, API endpoints, types, database changes
+3. If a feature requires a database migration, include the migration SQL in the commit AND remind James to run it
+4. If a feature requires environment variables, check .env.local to see if they exist. Report any missing ones.
+5. Do not create worktrees — work directly on the current branch
+6. Do not leave TODO comments in code — finish it or don't ship it
 
-⚠️ SENSITIVE MATERIAL — DO NOT SHARE IN CHAT ⚠️
-[describe what was done without showing the actual values]
-The actual values are stored safely in [location where they were saved].
-⚠️ END SENSITIVE MATERIAL ⚠️
+## AFTER YOU BUILD — MANDATORY TESTING CHECKLIST
+Before telling James anything is done, complete ALL of these:
 
-This applies to: Resend API keys, Supabase keys, Stripe keys, Anthropic keys, VAPID keys, any .env values, any OAuth tokens, and any passwords. If unsure whether something is sensitive, treat it as sensitive.
+### 1. Build check
+- Run: npm run build
+- ZERO errors required. Warnings are okay. Errors are not.
+- If build fails, fix it before reporting.
 
-PUSH RULE:
-After completing all changes for a task:
-1. Run npm run build to verify everything compiles
-2. If the build fails, fix the error and rebuild until it passes
-3. Once the build passes, git add all changed files
-4. git commit with a conventional format message (feat:, fix:, chore:) summarizing all changes
-5. git push origin main
-6. Confirm Vercel picks up the deployment and it reaches Ready status
-7. Only THEN report results back to James
-8. Never report a task as complete with unpushed commits
-9. If multiple files were changed across multiple fixes in one task, they go in ONE commit and ONE push at the end
+### 2. Type check
+- Run: npx tsc --noEmit
+- ZERO TypeScript errors required.
 
-PRE-FLIGHT CHECKLIST:
-Before doing anything else, confirm back to James in plain English what you understood the task to be, every file you plan to touch, every external service you plan to use, and any assumptions you are making. Wait for explicit written confirmation before proceeding.
+### 3. Route verification
+- For any new pages created, verify the route exists: curl -s -o /dev/null -w "%{http_code}" https://app.usetended.com/[route]
+- Must return 200, not 404.
+- If the deploy hasn't finished, wait for it or force deploy first.
 
-SCOPE:
-Only access, read, or modify files explicitly listed in the task. Do not explore, open, or reference anything else. If completing the task would be cleaner by touching an unlisted file, stop and ask first.
+### 4. Flow testing (for user-facing changes)
+- Trace the ENTIRE user flow from start to finish
+- For login/signup: Can a user actually create an account and land on the right page?
+- For onboarding: Does every step render? Do answers save? Does the final step redirect correctly?
+- For payments: Does the Stripe checkout link work? Does the webhook update the tier?
+- For any form: Do all fields validate? Does submit work? Does the success state show?
+- Check on the business subdomain AND the app subdomain if the change affects both.
 
-CONSENT GATES:
-Stop and wait for explicit written approval before sending any email via Resend, reading from or writing to any Supabase table, pushing building or deploying any code, creating editing or deleting any environment variables, making any external API call not listed in the task, deleting any file, or overwriting more than one file at a time. State clearly what you are about to do and why. Wait for approval. Proceed one file at a time.
-ROLLBACK PROTECTION:
-Before modifying any file, read and save its current state in full. Never overwrite without a restore point. If something goes wrong, restore immediately and report.
+### 5. Mobile check
+- Check that no component uses hardcoded widths over 375px
+- Check that touch targets are 44px minimum
+- Check that text doesn't overflow containers
 
-RATE LIMIT ON ERRORS:
-If you hit an unexpected error on the same file more than 3 times, stop immediately. Do not try again. Report in plain English and wait for instruction.
+### 6. Database check
+- If the code references a table or column, verify it exists in Supabase
+- If a migration is needed, include the SQL and flag it prominently in your report
 
-SECURITY:
-Never print, log, comment, or expose API keys, Supabase URLs, environment variables, or credentials anywhere. Never log, store, transmit, or expose user emails, names, or personal data. Treat all Supabase data as strictly private and confidential.
+## REPORT FORMAT
+When reporting back to James, use this exact format:
 
-STEP BY STEP:
-Present a full plan before writing a single line of code. List every file to be touched. Wait for approval. Proceed one file at a time and report completion before moving to the next.
+WHAT WAS BUILT: [one sentence summary]
 
-PLAIN ENGLISH ONLY:
-All updates, summaries, and reports must be in plain English with no technical jargon. If stuck, uncertain, or blocked, say so immediately. Never guess forward.
+FILES CHANGED: [list of files]
 
-NO ASSUMPTIONS:
-If anything is unclear, ambiguous, or missing, ask before proceeding. Never infer intent. Never fill in gaps independently.
-QUALITY LOOP — MANDATORY:
-After completing any unit of work, enter this loop. Loop ceiling is 5 iterations maximum.
+TESTING:
+- Build: PASS/FAIL
+- TypeScript: PASS/FAIL  
+- Routes verified: [list of URLs checked with status codes]
+- Flow tested: [describe the flow you tested and result]
+- Mobile: PASS/FAIL
 
-THINK: Analyze output critically. Ask — does this fully satisfy the requirement, are there edge cases not handled, are there security performance or UX issues, is anything brittle unclear or assumptive, what could break in production, what would a hostile user try to exploit. List every flaw found no matter how small.
+MIGRATIONS NEEDED: [SQL to run, or "None"]
+ENV VARS NEEDED: [any missing, or "None"]
+DEPLOY STATUS: [deployed/deploying/needs force deploy]
 
-GENERATE OPTIONS: For each flaw generate at least 3 possible fixes.
+KNOWN ISSUES: [anything that doesn't work yet, or "None"]
 
-ELIMINATE: Remove bad options first. For each ask — does this introduce new risk, is this overly complex, does this conflict with existing code or patterns, does this violate any rule above. Eliminate until only the best option remains.
+## BUSINESS SUBDOMAIN RULES
+- business.usetended.com is a SEPARATE experience from app.usetended.com
+- Business login, onboarding, dashboard, and pricing are ALL different from personal
+- When building business features, ALWAYS test on the business subdomain
+- Business users should NEVER see personal onboarding, asset cards, or consumer pricing
+- Personal users should NEVER see business onboarding or business dashboard
 
-ACT: Implement the chosen fix.
+## CODE STANDARDS
+- Use TypeScript strictly — no 'any' types
+- Use server components by default, client components only when needed
+- All API routes must verify authentication
+- Admin routes must verify app_metadata.role === 'admin'
+- All database queries must work with RLS enabled
+- No console.log in production code — use proper error handling
+- No hardcoded URLs — use environment variables or relative paths
+- Mobile-first responsive design — test at 375px width
 
-REVIEW: Re-examine full output. Report what changed since last loop in plain English.
-
-REPEAT: Continue until zero flaws or ceiling is reached.
-IF CEILING IS REACHED: Stop immediately. Deliver a plain English report containing current state of the work, every remaining flaw, options considered and why none were chosen, recommendation on how to proceed, and every decision that requires James's input. Wait for instruction before doing anything else.
-
-FINAL DECLARATION: When loop completes with zero flaws state — Quality loop complete. Zero flaws identified. Ready for your review. Present final output for approval before any further action.
-
-MEMORY AND LEARNING:
-After every completed task in this order — first append to cowork-log.md in the repo root including date and time, what was built, files changed, key decisions and why, flaws found and how resolved, errors encountered and how handled, and anything to remember for future sessions. Second extract lessons from cowork-log.md and update CLAUDE.md so every future session benefits automatically. Third update tended-agent-rules.md if any rule should be revised based on what was learned.
-
-cowork-log.md must be in .gitignore and never pushed to any remote repository. CLAUDE.md and tended-agent-rules.md may be pushed as they contain no sensitive data.
+## WHAT NOT TO DO
+- Do not create features that half-work
+- Do not push code that doesn't build
+- Do not say "follow-up task needed" for core functionality — finish it now
+- Do not create placeholder pages that say "Coming Soon" unless James specifically asks
+- Do not assume a database table exists — verify it
+- Do not assume an environment variable is set — check it
+- Do not create new git worktrees
